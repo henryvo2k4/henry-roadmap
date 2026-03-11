@@ -1,0 +1,63 @@
+body{
+background:linear-gradient(135deg,#eef2ff,#fdf2f8);
+font-family: Quicksand, sans-serif;
+text-align:center;
+margin:0;
+}
+
+.leaflet-popup-content {
+    font-family: "Segoe UI", "Roboto", sans-serif;
+    font-size: 14px;
+}
+
+.title{
+margin-top:15px;
+color:#444;
+font-size:28px;
+}
+
+#map{
+height:550px;
+width:95%;
+margin:auto;
+
+border-radius:30px;
+
+box-shadow:
+0 20px 60px rgba(0,0,0,0.25);
+
+border:6px solid white;
+
+overflow:hidden;
+}
+
+.leaflet-popup-content-wrapper{
+
+border-radius:15px;
+
+background:#fff;
+
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
+
+font-size:14px;
+}
+
+.leaflet-popup-tip{
+
+background:white;
+
+}
+
+.marker-bounce{
+
+animation:bounce 0.5s;
+
+}
+
+@keyframes bounce{
+
+0% {transform:translateY(-20px)}
+50% {transform:translateY(0)}
+100% {transform:translateY(-10px)}
+
+}
