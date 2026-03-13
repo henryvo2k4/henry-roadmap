@@ -211,7 +211,7 @@ function openReportForm() {
 // SUBMIT REPORT
 // =====================================================
 
-function submitReport() {
+async function submitReport() {
 
     const type = document.getElementById("incidentType").value;
 
@@ -221,36 +221,107 @@ function submitReport() {
     }
 
     const fileInput = document.getElementById("incidentImage");
-
     let imageURL = "";
 
+    // =====================================================
+    // UPLOAD IMAGE
+    // =====================================================
+
     if (fileInput.files.length > 0) {
-        imageURL = URL.createObjectURL(fileInput.files[0]);
+
+        const file = fileInput.files[0];
+
+        const fileName = Date.now() + "_" + file.name;
+
+        const { data, error } = await supabaseClient
+        .storage
+        .from("incident-images")
+        .upload(fileName, file);
+
+        if(error){
+            console.log("Upload lỗi:", error);
+        }else{
+
+            const { data: publicURL } = supabaseClient
+            .storage
+            .from("incident-images")
+            .getPublicUrl(fileName);
+
+            imageURL = publicURL.publicUrl;
+
+        }
+
     }
 
-    let popupText = "<b>Sự cố:</b> " + type;
+    // =====================================================
+    // LƯU DATABASE
+    // =====================================================
 
-    if (imageURL) {
-        popupText += `<br><img src="${imageURL}" width="120">`;
+    const { error } = await supabaseClient
+    .from("road_events")
+    .insert([
+        {
+            lat: reportLatLng.lat,
+            lng: reportLatLng.lng,
+            type: type,
+            image_url: imageURL,
+            status: "pending"
+        }
+    ]);
+
+    if(error){
+        console.log("Lỗi lưu DB:", error);
+        alert("❌ Không gửi được báo cáo");
+        return;
     }
 
-    const size = getIconSize();
-    const icon = createIcon(ICONS[type], size);
+    alert("✅ Báo cáo đã gửi, chờ admin duyệt");
 
-    tempMarker.setIcon(icon);
-    tempMarker.incidentType = type;
-    tempMarker.bindPopup(popupText);
-
-    tempMarker._icon.classList.add("marker-bounce");
-
-    markers.push(tempMarker);
-
+    map.removeLayer(tempMarker);
     tempMarker = null;
 
     map.closePopup();
 
 }
 
+async function loadIncidents(){
+
+    const { data, error } = await supabaseClient
+    .from("road_events")
+    .select("*")
+    .eq("status","approved");
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    data.forEach(row => {
+
+        const size = getIconSize();
+
+        const icon = createIcon(ICONS[row.type], size);
+
+        const marker = L.marker(
+            [row.lat, row.lng],
+            {icon: icon}
+        ).addTo(map);
+
+        marker.incidentType = row.type;
+
+        let popup = "<b>Sự cố:</b> " + row.type;
+
+        if(row.image_url){
+            popup += `<br><img src="${row.image_url}" width="120">`;
+        }
+
+        marker.bindPopup(popup);
+
+        markers.push(marker);
+
+    });
+
+}
 
 // =====================================================
 // GPS LOCATION
@@ -721,3 +792,4 @@ async function testDB() {
 
 // 4. Chạy test
 testDB();
+loadIncidents();
