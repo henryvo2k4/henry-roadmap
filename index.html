@@ -1,26 +1,105 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
+
 <meta charset="UTF-8">
 <title>Henry Road Monitor</title>
 
 <link rel="stylesheet" href="style.css">
 
-<link
-rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-/>
+<!-- LEAFLET MAP -->
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
+<!-- SEARCH BAR -->
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
+
+<!-- ROUTING -->
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css"/>
+
+<!-- LEAFLET DRAW -->
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 </head>
+
 
 <body>
 
-<h1 class="title">SmartRoad GIS Monitor</h1>
+<h1 class="title">Henry Road Monitor</h1>
+
+
+<!-- NÚT CHỨC NĂNG -->
+
+<button id="gpsBtn">📍 Vị trí của tôi</button>
+
+<button id="routeBtn">🧭 Chỉ đường</button>
+
+<button id="drawBtn">✏️ Khoanh vùng</button>
+
+
+
+<!-- BẢN ĐỒ -->
 
 <div id="map"></div>
 
+
+
+<!-- DASHBOARD -->
+
+<div id="dashboard">
+
+<h3>🧭 Thông tin tuyến đường</h3>
+
+<div id="dashboardGrid">
+
+<!-- CỘT 1: HƯỚNG DẪN -->
+
+<div id="routeSteps">
+
+<p>Chưa có tuyến đường</p>
+
+</div>
+
+
+<!-- CỘT 2: THỐNG KÊ -->
+
+<div id="routeStats">
+
+<p>🕳 Ổ gà: <span id="potholeRoute">0</span></p>
+
+<p>🌊 Ngập nước: <span id="floodRoute">0</span></p>
+
+<p>⚠️ Tổng cảnh báo: <span id="warningRoute">0</span></p>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- ========================= -->
+<!-- JAVASCRIPT -->
+<!-- ========================= -->
+
+<!-- LEAFLET -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- SEARCH -->
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<!-- ROUTING -->
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+<!-- SCRIPT CHÍNH -->
 <script src="script.js"></script>
 
 </body>
+
 </html>

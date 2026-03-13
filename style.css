@@ -1,63 +1,480 @@
+/* =====================================================
+GLOBAL
+===================================================== */
+
 body{
-background:linear-gradient(135deg,#eef2ff,#fdf2f8);
-font-family: Quicksand, sans-serif;
-text-align:center;
-margin:0;
+    margin:0;
+    background:linear-gradient(135deg,#eef2ff,#fdf2f8);
+    font-family:Quicksand, sans-serif;
 }
 
-.leaflet-popup-content {
-    font-family: "Segoe UI", "Roboto", sans-serif;
-    font-size: 14px;
-}
+
+/* =====================================================
+TITLE
+===================================================== */
 
 .title{
-margin-top:15px;
-color:#444;
-font-size:28px;
+    margin-top:15px;
+    color:#444;
+    font-size:28px;
+    text-align:center;
 }
 
+
+/* =====================================================
+MAP
+===================================================== */
+
 #map{
-height:550px;
-width:95%;
-margin:auto;
 
-border-radius:30px;
+    height:85vh;
+    width:95%;
 
-box-shadow:
-0 20px 60px rgba(0,0,0,0.25);
+    margin:auto;
 
-border:6px solid white;
+    border-radius:30px;
+    border:6px solid white;
 
-overflow:hidden;
+    overflow:hidden;
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,0.25);
+
+}
+
+
+/* =====================================================
+COMMON 3D CARD STYLE
+===================================================== */
+
+.ui-card{
+
+    background:white;
+
+    border-radius:16px;
+
+    box-shadow:
+        0 6px 14px rgba(0,0,0,0.20),
+        0 2px 6px rgba(0,0,0,0.10);
+
+    transition:all .25s ease;
+
+}
+
+.ui-card:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 10px 22px rgba(0,0,0,0.25),
+        0 4px 10px rgba(0,0,0,0.12);
+
+}
+
+
+/* =====================================================
+POPUP
+===================================================== */
+
+.leaflet-popup-content{
+
+    font-family:"Segoe UI","Roboto",sans-serif;
+    font-size:14px;
+
 }
 
 .leaflet-popup-content-wrapper{
 
-border-radius:15px;
+    border-radius:22px;
 
-background:#fff;
+    background:#fff;
 
-box-shadow:0 10px 25px rgba(0,0,0,0.2);
+    box-shadow:
+        0 8px 20px rgba(0,0,0,0.25),
+        inset 0 -2px 4px rgba(0,0,0,0.08);
 
-font-size:14px;
 }
 
 .leaflet-popup-tip{
+    background:white;
+}
 
-background:white;
+
+/* =====================================================
+MARKER STYLE
+===================================================== */
+
+.leaflet-marker-icon{
+
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,0.35));
 
 }
 
+
+/* =====================================================
+MARKER ANIMATION
+===================================================== */
+
 .marker-bounce{
-
-animation:bounce 0.5s;
-
+    animation:bounce .5s;
 }
 
 @keyframes bounce{
 
-0% {transform:translateY(-20px)}
-50% {transform:translateY(0)}
-100% {transform:translateY(-10px)}
+    0%{transform:translateY(-20px)}
+    50%{transform:translateY(0)}
+    100%{transform:translateY(-10px)}
 
+}
+
+
+/* =====================================================
+SEARCH BAR
+===================================================== */
+
+.leaflet-control-geocoder{
+
+    border:none !important;
+
+    background:transparent !important;
+
+    width:260px;
+
+    animation:searchPop .4s ease;
+
+}
+
+.leaflet-control-geocoder-form input{
+
+    width:100%;
+
+    padding:10px 16px;
+
+    border-radius:30px;
+
+    border:none;
+
+    font-size:14px;
+
+    outline:none;
+
+    background:#fff !important;
+
+    box-shadow:
+        0 6px 14px rgba(0,0,0,0.22),
+        inset 0 -2px 4px rgba(0,0,0,0.08);
+
+    transition:all .25s ease;
+
+}
+
+.leaflet-control-geocoder-form input:hover{
+
+    transform:scale(1.03);
+
+}
+
+.leaflet-control-geocoder-form input:focus{
+
+    transform:scale(1.05);
+
+}
+
+.leaflet-control-geocoder-icon{
+    display:none !important;
+}
+
+
+/* =====================================================
+SEARCH DROPDOWN
+===================================================== */
+
+.leaflet-control-geocoder-alternatives{
+
+    border-radius:12px;
+
+    overflow:hidden;
+
+    box-shadow:
+        0 10px 25px rgba(0,0,0,0.25);
+
+}
+
+.leaflet-control-geocoder-alternatives li{
+
+    padding:10px;
+    transition:background .2s;
+
+}
+
+.leaflet-control-geocoder-alternatives li:hover{
+
+    background:#f0f7ff;
+    cursor:pointer;
+
+}
+
+
+/* =====================================================
+SEARCH ANIMATION
+===================================================== */
+
+@keyframes searchPop{
+
+    0%{
+        transform:scale(.8);
+        opacity:0;
+    }
+
+    100%{
+        transform:scale(1);
+        opacity:1;
+    }
+
+}
+
+
+/* =====================================================
+MAP BUTTONS
+===================================================== */
+
+#gpsBtn,
+#routeBtn,
+#drawBtn{
+
+    position:absolute;
+
+    right:50px;
+
+    background:#fff !important;
+
+    border:none;
+
+    padding:10px 16px;
+
+    border-radius:25px;
+
+    cursor:pointer;
+
+    font-size:14px;
+
+    z-index:1000;
+
+    box-shadow:
+        0 6px 14px rgba(0,0,0,0.18),
+        0 2px 6px rgba(0,0,0,0.10);
+
+    transition:all .25s;
+
+}
+
+#gpsBtn:hover,
+#routeBtn:hover,
+#drawBtn:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 10px 22px rgba(0,0,0,0.25),
+        0 4px 10px rgba(0,0,0,0.12);
+
+}
+
+#gpsBtn{ top:90px; }
+#routeBtn{ top:140px; }
+#drawBtn{ top:190px; }
+
+
+/* =====================================================
+DASHBOARD
+===================================================== */
+
+#dashboard{
+
+    position:absolute;
+
+    bottom:40px;
+    left:40px;
+
+    width:min(420px,90vw);
+
+    background:white;
+
+    padding:16px;
+
+    border-radius:20px;
+
+    z-index:1000;
+
+    box-shadow:
+        0 12px 30px rgba(0,0,0,0.25);
+
+    transition:all .3s ease;
+
+}
+
+
+/* =====================================================
+DASHBOARD TITLE
+===================================================== */
+
+#dashboard h3{
+
+    margin:0 0 10px 0;
+
+    font-size:16px;
+
+    color:#333;
+
+    text-align:left;
+
+}
+
+
+/* =====================================================
+GRID LAYOUT
+===================================================== */
+
+#dashboardGrid{
+
+    display:grid;
+
+    grid-template-columns:1fr;
+
+    gap:12px;
+
+}
+
+
+/* khi có route -> 2 cột */
+
+#dashboard.route-active #dashboardGrid{
+
+    grid-template-columns:1.6fr 1fr;
+
+}
+
+
+/* =====================================================
+ROUTE STEPS
+===================================================== */
+
+#routeSteps{
+
+    display:none;
+
+    max-height:200px;
+
+    overflow-y:auto;
+
+    font-size:13px;
+
+}
+
+#dashboard.route-active #routeSteps{
+    display:block;
+}
+
+#routeSteps p{
+
+    margin:6px 0;
+
+    padding:6px 8px;
+
+    background:#f6f8ff;
+
+    border-radius:8px;
+
+}
+
+
+/* =====================================================
+ROUTE STATS
+===================================================== */
+
+#routeStats{
+
+    background:#f7f9ff;
+
+    padding:10px;
+
+    border-radius:12px;
+
+    font-size:14px;
+
+}
+
+
+/* =====================================================
+SCROLLBAR
+===================================================== */
+
+#routeSteps::-webkit-scrollbar{
+    width:6px;
+}
+
+#routeSteps::-webkit-scrollbar-thumb{
+
+    background:#bfc7ff;
+
+    border-radius:6px;
+
+}
+
+
+/* =====================================================
+MOBILE
+===================================================== */
+
+@media (max-width:600px){
+
+#map{
+    height:95vh;
+}
+
+#dashboard{
+
+    left:10px;
+    bottom:10px;
+
+    width:92vw;
+
+    padding:12px;
+
+}
+
+#dashboard.route-active #dashboardGrid{
+
+    grid-template-columns:1fr;
+
+}
+
+}
+
+.leaflet-interactive{
+transition:all 0.2s;
+}
+
+.leaflet-interactive:hover{
+
+stroke-width:3;
+fill-opacity:0.25;
+
+}
+
+/* Marker highlight */
+
+.marker-highlight{
+    animation: markerGlow 1s infinite alternate;
+}
+
+@keyframes markerGlow{
+    from{
+        filter: drop-shadow(0 0 2px yellow);
+        transform: scale(1);
+    }
+    to{
+        filter: drop-shadow(0 0 12px orange);
+        transform: scale(1.2);
+    }
 }
