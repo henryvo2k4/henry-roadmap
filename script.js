@@ -691,3 +691,23 @@ geocoder.on("markgeocode", function (e) {
     checkIncidentsInArea(rect);
 
 });
+
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+const supabaseUrl = 'https://sweqvobmlntyhyeuurfr.supabase.co'
+const supabaseKey = 'sb_publishable_xsqRVFRoQSh0c9wzwc5vxA_Hw9aj9fF'
+
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+async function testDB(){
+
+const { data, error } = await supabase
+.from('road_events')
+.select('*')
+
+console.log(data)
+console.log(error)
+
+}
+
+testDB()
