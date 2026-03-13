@@ -2,7 +2,10 @@
 // MAP
 // =====================================================
 
-const map = L.map("map").setView([10.8231,106.6297],13);
+const map = L.map("map", {
+    zoomControl: false,
+    doubleClickZoom: false
+}).setView([10.8231, 106.6297], 13);
 
 L.tileLayer(
 "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -15,10 +18,9 @@ L.tileLayer(
 // =====================================================
 
 const supabaseUrl = "https://sweqvobmlntyhyeuurfr.supabase.co";
-
 const supabaseKey = "sb_publishable_xsqRVFRoQSh0c9wzwc5vxA_Hw9aj9fF";
 
-const supabase = window.supabase.createClient(
+const supabaseClient = window.supabase.createClient(
 supabaseUrl,
 supabaseKey
 );
@@ -30,7 +32,7 @@ supabaseKey
 
 async function loadReports(){
 
-const {data,error} = await supabase
+const {data,error} = await supabaseClient
 .from("road_events")
 .select("*")
 .order("created_at",{ascending:false});
@@ -59,7 +61,9 @@ card.innerHTML = `
 <b>Tọa độ:</b> ${lat.toFixed(5)}, ${lng.toFixed(5)}<br>
 <b>Status:</b> ${r.status}
 
-${r.image_url ? `<img src="${r.image_url}">` : ""}
+${r.image_url ? 
+`<img src="https://sweqvobmlntyhyeuurfr.supabase.co/storage/v1/object/public/incident-images/${r.image_url}" class="report-img">` 
+: ""}
 
 <div class="buttons">
 
@@ -125,7 +129,7 @@ iconAnchor:[20,40]
 
 async function approve(id){
 
-const {error} = await supabase
+const {error} = await supabaseClient
 .from("road_events")
 .update({status:"approved"})
 .eq("id",id);
@@ -147,7 +151,7 @@ async function removeReport(id){
 
 if(!confirm("Xóa báo cáo này?")) return;
 
-const {error} = await supabase
+const {error} = await supabaseClient
 .from("road_events")
 .delete()
 .eq("id",id);
