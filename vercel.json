@@ -3,6 +3,10 @@
     {
       "src": "/admin",
       "dest": "/admin/admin.html"
+    },
+    {
+      "src": "/henry",
+      "dest": "/admin/admin.html"
     }
   ]
 }
