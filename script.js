@@ -692,20 +692,32 @@ geocoder.on("markgeocode", function (e) {
 
 });
 
+
+// =====================================================
+// Database Testing with Supabase
+// =====================================================
+
+// 1. Thông tin kết nối Supabase
 const supabaseUrl = "https://sweqvobmlntyhyeuurfr.supabase.co";
 const supabaseKey = "sb_publishable_xsqRVFRoQSh0c9wzwc5vxA_Hw9aj9fF";
 
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+// 2. Tạo client kết nối database
+const supabaseClient = window.supabase.createClient(
+  supabaseUrl,
+  supabaseKey
+);
 
+// 3. Hàm test đọc dữ liệu từ bảng
 async function testDB() {
 
-const { data, error } = await supabase
-.from("road_events")
-.select("*");
+  const { data, error } = await supabaseClient
+    .from("road_events")
+    .select("*");
 
-console.log("DATA:", data);
-console.log("ERROR:", error);
+  console.log("DATA:", data);
+  console.log("ERROR:", error);
 
 }
 
+// 4. Chạy test
 testDB();
