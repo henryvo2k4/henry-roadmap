@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Traffic Admin Panel</title>
+
+<!-- STYLE TRANG CHÍNH -->
+<link rel="stylesheet" href="../style.css">
+
+<!-- STYLE ADMIN -->
+<link rel="stylesheet" href="admin.css">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+        <h2>🚦 Báo cáo người dùng</h2>
+
+        <div id="reportList"></div>
+
+    </div>
+
+    <!-- MAP -->
+    <div id="map"></div>
+
+</div>
+
+<script src="admin.js"></script>
+
+</body>
+
+</html>
