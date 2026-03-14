@@ -720,7 +720,7 @@ function calculateRouteIncidents(routeCoords) {
 
             if (type === "Hố gà") pothole++;
             if (type === "Lũ lụt") flood++;
-            if (type === "Thi Công") construction++;
+            if (type === "Thi công") construction++;
             if (type === "Nguy hiểm") danger++;
 
         }
@@ -794,6 +794,8 @@ document.getElementById("drawBtn").onclick = function () {
 
         // tắt kéo bản đồ
         map.dragging.disable();
+        map.touchZoom.disable();
+        map.doubleClickZoom.disable();
 
         alert(
             "✏️ Chế độ khoanh vùng\n\n" +
@@ -808,6 +810,8 @@ document.getElementById("drawBtn").onclick = function () {
 
         // bật lại kéo bản đồ
         map.dragging.enable();
+        map.touchZoom.enable();
+        map.doubleClickZoom.enable();
 
         clearAllDrawings();
 
@@ -834,6 +838,7 @@ map.on("mousedown", function (e) {
 
 });
 
+
 map.on("mousemove", function (e) {
 
     if (!isDrawing) return;
@@ -856,6 +861,78 @@ map.on("mousemove", function (e) {
 });
 
 map.on("mouseup", function () {
+
+    if (!isDrawing) return;
+
+    isDrawing = false;
+
+    if (drawPoints.length < 3) {
+        return;
+    }
+
+    drawPoints.push(drawPoints[0]);
+
+    if (drawLayer) {
+        map.removeLayer(drawLayer);
+    }
+
+    var polygon = L.polygon(drawPoints, {
+        color: "#ff5500",
+        weight: 2,
+        fillOpacity: 0.15
+    }).addTo(map);
+
+    drawnAreas.push(polygon);
+
+    calculateAllAreas();
+
+});
+
+// =====================================================
+// TOUCH EVENTS
+// =====================================================
+
+
+map.on("touchstart", function (e) {
+
+    if (!drawMode) return;
+
+    isDrawing = true;
+
+    const latlng = e.latlng;
+
+    drawPoints = [latlng];
+
+    if (drawLayer) {
+        map.removeLayer(drawLayer);
+    }
+
+});
+
+map.on("touchmove", function (e) {
+
+    if (!isDrawing) return;
+
+    const latlng = e.latlng;
+
+    const last = drawPoints[drawPoints.length - 1];
+
+    if (!last || last.distanceTo(latlng) > 5) {
+        drawPoints.push(latlng);
+    }
+
+    if (drawLayer) {
+        map.removeLayer(drawLayer);
+    }
+
+    drawLayer = L.polyline(drawPoints, {
+        color: "#ff5500",
+        weight: 3
+    }).addTo(map);
+
+});
+
+map.on("touchend", function () {
 
     if (!isDrawing) return;
 
