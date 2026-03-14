@@ -14,19 +14,6 @@ L.tileLayer(
 
 
 // =====================================================
-// SUPABASE CONNECTION
-// =====================================================
-
-const supabaseUrl = "https://sweqvobmlntyhyeuurfr.supabase.co";
-const supabaseKey = "sb_publishable_xsqRVFRoQSh0c9wzwc5vxA_Hw9aj9fF";
-
-const supabaseClient = window.supabase.createClient(
-supabaseUrl,
-supabaseKey
-);
-
-
-// =====================================================
 // LOAD REPORTS
 // =====================================================
 
