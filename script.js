@@ -634,7 +634,7 @@ function calculateRouteIncidents(routeCoords){
     let construction=0;
     let danger=0;
 
-    const buffer = 0.0003; // ~30m
+    const buffer = 0.0001; // ~10m
 
     markers.forEach(m=>{
 
