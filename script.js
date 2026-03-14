@@ -7,6 +7,18 @@ const map = L.map("map", {
     doubleClickZoom: false
 }).setView([10.8231, 106.6297], 13);
 
+map.getContainer().style.touchAction = "none";
+
+map.getContainer().addEventListener(
+    "touchmove",
+    function (e) {
+        if (drawMode) {
+            e.preventDefault();
+        }
+    },
+    { passive: false }
+);
+
 
 // =====================================================
 // TILE MAP
@@ -846,7 +858,7 @@ map.on("mousemove", function (e) {
 
     const last = drawPoints[drawPoints.length - 1];
 
-    if (!last || last.distanceTo(e.latlng) > 2) {
+    if (!last || last.distanceTo(e.latlng) > 5) {
         drawPoints.push(e.latlng);
     }
 
@@ -925,7 +937,7 @@ map.on("touchmove", function (e) {
 
     const last = drawPoints[drawPoints.length - 1];
 
-    if (!last || last.distanceTo(latlng) > 5) {
+    if (!last || last.distanceTo(latlng) > 2) {
         drawPoints.push(latlng);
     }
 
