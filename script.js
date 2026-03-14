@@ -794,7 +794,9 @@ document.getElementById("drawBtn").onclick = function () {
 
         // tắt kéo bản đồ
         map.dragging.disable();
-        
+        map.touchZoom.disable();
+        map.doubleClickZoom.disable();
+
 
         alert(
             "✏️ Chế độ khoanh vùng\n\n" +
@@ -809,6 +811,8 @@ document.getElementById("drawBtn").onclick = function () {
 
         // bật lại kéo bản đồ
         map.dragging.enable();
+        map.touchZoom.enable();
+        map.doubleClickZoom.enable();
 
         clearAllDrawings();
 
@@ -842,7 +846,7 @@ map.on("mousemove", function (e) {
 
     const last = drawPoints[drawPoints.length - 1];
 
-    if (!last || last.distanceTo(e.latlng) > 5) {
+    if (!last || last.distanceTo(e.latlng) > 2) {
         drawPoints.push(e.latlng);
     }
 
@@ -894,6 +898,11 @@ map.on("touchstart", function (e) {
 
     if (!drawMode) return;
 
+    // nếu nhiều hơn 1 ngón → cho zoom
+    if (e.originalEvent.touches.length > 1) {
+        return;
+    }
+
     isDrawing = true;
 
     const latlng = e.latlng;
@@ -909,6 +918,8 @@ map.on("touchstart", function (e) {
 map.on("touchmove", function (e) {
 
     if (!isDrawing) return;
+
+    e.originalEvent.preventDefault(); // QUAN TRỌNG
 
     const latlng = e.latlng;
 
@@ -929,23 +940,19 @@ map.on("touchmove", function (e) {
 
 });
 
-map.on("touchend", function () {
+map.on("touchend", function (e) {
 
     if (!isDrawing) return;
 
     isDrawing = false;
 
-    if (drawPoints.length < 3) {
-        return;
-    }
-
-    drawPoints.push(drawPoints[0]);
+    if (drawPoints.length < 3) return;
 
     if (drawLayer) {
         map.removeLayer(drawLayer);
     }
 
-    var polygon = L.polygon(drawPoints, {
+    const polygon = L.polygon(drawPoints, {
         color: "#ff5500",
         weight: 2,
         fillOpacity: 0.15
@@ -1065,7 +1072,8 @@ geocoder.on("markgeocode", function (e) {
         weight: 2
     }).addTo(map);
 
-    checkIncidentsInArea(rect);
+    drawnAreas.push(rect);
+    calculateAllAreas();
 
 });
 
@@ -1084,18 +1092,5 @@ const supabaseClient = window.supabase.createClient(
     supabaseKey
 );
 
-// 3. Hàm test đọc dữ liệu từ bảng
-async function testDB() {
-
-    const { data, error } = await supabaseClient
-        .from("road_events")
-        .select("*");
-
-    console.log("DATA:", data);
-    console.log("ERROR:", error);
-
-}
-
 // 4. Chạy test
-testDB();
 loadIncidents();
