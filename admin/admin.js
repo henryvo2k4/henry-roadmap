@@ -37,6 +37,17 @@ async function loadReports() {
         const lat = Number(r.lat);
         const lng = Number(r.lng);
 
+        const date = new Date(r.created_at);
+
+        // Định dạng thời gian theo chuẩn Việt Nam
+        const timeString = date.toLocaleString("vi-VN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+        });
+
         // =============================
         // XỬ LÝ IMAGE ARRAY
         // =============================
@@ -87,7 +98,10 @@ async function loadReports() {
 
 <b>Cảnh báo:</b> ${r.type}<br>
 <b>Tọa độ:</b> ${lat.toFixed(5)}, ${lng.toFixed(5)}<br>
-<b>Trạng Thái:</b> ${r.status}<br>
+
+<b>Thời gian gửi:</b> ${timeString}<br>
+
+<b>Trạng thái:</b> ${r.status}<br>
 <b>Mô tả:</b> ${r.description || "Không có"}<br>
 
 ${galleryHTML}
@@ -110,7 +124,6 @@ Xóa
 </button>
 
 </div>
-
 `;
 
         container.appendChild(card);

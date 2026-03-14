@@ -79,7 +79,7 @@ function createIcon(url, size) {
 const ICONS = {
     "Hố gà": "https://cdn-icons-png.flaticon.com/512/1684/1684423.png",
     "Lũ lụt": "https://cdn-icons-png.flaticon.com/512/1576/1576457.png",
-    "Xây dựng": "https://cdn-icons-png.flaticon.com/512/4930/4930409.png",
+    "Thi công": "https://cdn-icons-png.flaticon.com/512/4930/4930409.png",
     "Nguy hiểm": "https://cdn-icons-png.flaticon.com/512/564/564619.png"
 };
 
@@ -173,7 +173,7 @@ function openReportForm() {
             <option value="">-- chọn loại --</option>
             <option value="Hố gà">🚧 Hố gà</option>
             <option value="Lũ lụt">🌊 Ngập nước</option>
-            <option value="Xây dựng">🏗️ Thi công</option>
+            <option value="Thi công">🏗️ Thi công</option>
             <option value="Nguy hiểm">⚠️ Nguy hiểm</option>
         </select>
 
@@ -271,7 +271,8 @@ async function submitReport() {
                 type: type,
                 description: description,
                 image_url: JSON.stringify(imageURLs),
-                status: "pending"
+                status: "pending",
+                created_at: new Date().toISOString()
             }
         ]);
 
@@ -317,6 +318,19 @@ async function loadIncidents() {
         marker.incidentType = row.type;
 
         let popup = "<b>Sự cố:</b> " + row.type;
+
+        if (row.created_at) {
+
+            const date = new Date(row.created_at);
+
+            const timeString =
+                date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+                + " • " +
+                date.toLocaleDateString("vi-VN");
+
+            popup += "<br><b>Thời gian:</b> " + timeString;
+
+        }
 
         if (row.description) {
             popup += "<br><b>Mô tả:</b> " + row.description;
@@ -886,7 +900,7 @@ function calculateAllIncidents() {
 
         if (type === "Hố gà") pothole++;
         if (type === "Lũ lụt") flood++;
-        if (type === "Xây dựng") construction++;
+        if (type === "Thi công") construction++;
         if (type === "Nguy hiểm") danger++;
 
     });
@@ -926,7 +940,7 @@ function calculateAllAreas() {
 
             if (type === "Hố gà") pothole++;
             if (type === "Lũ lụt") flood++;
-            if (type === "Xây dựng") construction++;
+            if (type === "Thi công") construction++;
             if (type === "Nguy hiểm") danger++;
 
         }
