@@ -109,7 +109,7 @@ map.on("zoomend", function () {
     });
 
     if (tempMarker) {
-        tempMarker.setIcon(createIcon(ICONS.pothole, size));
+        tempMarker.setIcon(createIcon(ICONS["Hố gà"], size));
     }
 
 });
@@ -119,17 +119,19 @@ map.on("zoomend", function () {
 // DOUBLE CLICK → BÁO CÁO
 // =====================================================
 
-map.on("dblclick", function (e) {
+map.on("dblclick", async function (e) {
 
     if(drawMode) return;
 
-    reportLatLng = e.latlng;
+    const snapped = await snapToRoad(e.latlng.lat, e.latlng.lng);
+
+    reportLatLng = snapped;
 
     if (tempMarker) map.removeLayer(tempMarker);
 
     tempMarker = L.marker(
-        [reportLatLng.lat, reportLatLng.lng],
-        { icon: createIcon(ICONS.pothole, getIconSize()) }
+        [snapped.lat, snapped.lng],
+        { icon: createIcon(ICONS["Hố gà"], getIconSize()) }
     ).addTo(map);
 
     openReportForm();
@@ -270,6 +272,7 @@ async function submitReport() {
 
 }
 
+
 async function loadIncidents(){
 
     const { data, error } = await supabaseClient
@@ -306,6 +309,8 @@ async function loadIncidents(){
         markers.push(marker);
 
     });
+
+    calculateAllIncidents();
 
 }
 
@@ -379,17 +384,13 @@ function createEndIcon() {
 
 document.getElementById("routeBtn").onclick = function () {
 
-    document.getElementById("dashboard")
-        .classList.remove("route-active");
+    if(selectingRoute || routingControl){
+        cancelRoute();
+        this.innerText = "🧭 Chỉ đường";
+        return;
+    }
 
-    if (startMarker) map.removeLayer(startMarker);
-    if (endMarker) map.removeLayer(endMarker);
-
-    startMarker = null;
-    endMarker = null;
-
-    startPoint = null;
-    endPoint = null;
+    this.innerText = "❌ Huỷ chỉ đường";
 
     selectingRoute = true;
 
@@ -400,6 +401,32 @@ document.getElementById("routeBtn").onclick = function () {
     );
 
 };
+
+
+// =====================================================
+// SNAP TO ROAD (điều chỉnh điểm người dùng chọn cho chính xác trên đường)
+// =====================================================
+
+async function snapToRoad(lat, lng){
+
+    const url = `https://router.project-osrm.org/nearest/v1/driving/${lng},${lat}`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if(data.waypoints && data.waypoints.length > 0){
+
+        const snapped = data.waypoints[0].location;
+
+        return {
+            lat: snapped[1],
+            lng: snapped[0]
+        };
+
+    }
+
+    return {lat, lng};
+}
 
 
 // =====================================================
@@ -482,6 +509,10 @@ function createRoute(start, end) {
 
         showInstructions(route.instructions);
 
+        const coords = route.coordinates;
+
+        calculateRouteIncidents(coords);
+
     });
 
 }
@@ -541,6 +572,135 @@ function isPointInPolygon(point, polygon) {
     }
 
     return inside;
+
+}
+
+// =====================================================
+// DISTANCE TO SEGMENT (để tính khoảng cách từ điểm đến đường đi)
+// =====================================================
+function distanceToSegment(p, p1, p2){
+
+    const x = p.lng;
+    const y = p.lat;
+
+    const x1 = p1.lng;
+    const y1 = p1.lat;
+
+    const x2 = p2.lng;
+    const y2 = p2.lat;
+
+    const A = x - x1;
+    const B = y - y1;
+    const C = x2 - x1;
+    const D = y2 - y1;
+
+    const dot = A * C + B * D;
+    const len_sq = C * C + D * D;
+
+    let param = -1;
+
+    if(len_sq !== 0){
+        param = dot / len_sq;
+    }
+
+    let xx, yy;
+
+    if(param < 0){
+        xx = x1;
+        yy = y1;
+    }
+    else if(param > 1){
+        xx = x2;
+        yy = y2;
+    }
+    else{
+        xx = x1 + param * C;
+        yy = y1 + param * D;
+    }
+
+    const dx = x - xx;
+    const dy = y - yy;
+
+    return Math.sqrt(dx*dx + dy*dy);
+}
+
+// =====================================================
+// TÍNH CÁC SỰ CỐ TRÊN TUYẾN ĐƯỜNG
+// =====================================================
+function calculateRouteIncidents(routeCoords){
+
+    let pothole=0;
+    let flood=0;
+    let construction=0;
+    let danger=0;
+
+    const buffer = 0.0003; // ~30m
+
+    markers.forEach(m=>{
+
+        const pos = m.getLatLng();
+        let nearRoute = false;
+
+        for(let i=0;i<routeCoords.length-1;i++){
+
+            const d = distanceToSegment(
+                pos,
+                routeCoords[i],
+                routeCoords[i+1]
+            );
+
+            if(d < buffer){
+                nearRoute = true;
+                break;
+            }
+
+        }
+
+        if(nearRoute){
+
+            const type = m.incidentType;
+
+            if(type==="Hố gà") pothole++;
+            if(type==="Lũ lụt") flood++;
+            if(type==="Xây dựng") construction++;
+            if(type==="Nguy hiểm") danger++;
+
+        }
+
+    });
+
+    updateDashboard(pothole,flood,construction,danger);
+
+}
+
+// =====================================================
+// CANCEL ROUTE
+// =====================================================
+
+function cancelRoute(){
+
+    selectingRoute = false;
+
+    if(routingControl){
+        map.removeControl(routingControl);
+        routingControl = null;
+    }
+
+    if(startMarker){
+        map.removeLayer(startMarker);
+        startMarker = null;
+    }
+
+    if(endMarker){
+        map.removeLayer(endMarker);
+        endMarker = null;
+    }
+
+    startPoint = null;
+    endPoint = null;
+
+    document.getElementById("dashboard")
+        .classList.remove("route-active");
 
 }
 
@@ -665,6 +825,32 @@ map.on("mouseup", function(){
 
 });
 
+// =====================================================
+// TÍNH TỔNG CẢNH BÁO TRÊN TOÀN BẢN ĐỒ
+// =====================================================
+
+function calculateAllIncidents(){
+
+    let pothole = 0;
+    let flood = 0;
+    let construction = 0;
+    let danger = 0;
+
+    markers.forEach(m => {
+
+        const type = m.incidentType || "Hố gà";
+
+        if(type === "Hố gà") pothole++;
+        if(type === "Lũ lụt") flood++;
+        if(type === "Xây dựng") construction++;
+        if(type === "Nguy hiểm") danger++;
+
+    });
+
+    updateDashboard(pothole, flood, construction, danger);
+
+}
+
 
 // =====================================================
 // TÍNH TỔNG CẢNH BÁO TRONG CÁC VÙNG
@@ -727,7 +913,7 @@ function clearAllDrawings(){
         map.removeLayer(drawLayer);
     }
 
-    updateDashboard(0,0,0,0);
+    calculateAllIncidents();
 
 }
 

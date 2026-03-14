@@ -296,7 +296,7 @@ DASHBOARD
     bottom:40px;
     left:40px;
 
-    width:min(420px,90vw);
+    width:260px;   /* mặc định nhỏ */
 
     background:white;
 
@@ -309,10 +309,17 @@ DASHBOARD
     box-shadow:
         0 12px 30px rgba(0,0,0,0.25);
 
-    transition:all .3s ease;
+    transition:all .35s ease;
 
 }
 
+/* khi bật route -> dashboard rộng ra */
+
+#dashboard.route-active{
+
+    width:420px;
+
+}
 
 /* =====================================================
 DASHBOARD TITLE
@@ -326,7 +333,7 @@ DASHBOARD TITLE
 
     color:#333;
 
-    text-align:left;
+    text-align:center;
 
 }
 
