@@ -121,7 +121,7 @@ map.on("zoomend", function () {
 
 map.on("dblclick", async function (e) {
 
-    if(drawMode) return;
+    if (drawMode) return;
 
     const snapped = await snapToRoad(e.latlng.lat, e.latlng.lng);
 
@@ -145,7 +145,7 @@ map.on("dblclick", async function (e) {
 
 map.on("click", function () {
 
-    if(drawMode) return;
+    if (drawMode) return;
 
     if (tempMarker) {
 
@@ -179,7 +179,20 @@ function openReportForm() {
 
         <br><br>
 
-        <input type="file" id="incidentImage">
+        <textarea 
+            id="incidentDesc"
+            placeholder="Mô tả sự cố..."
+            style="width:100%;height:60px"
+        ></textarea>
+
+        <br><br>
+
+        <input 
+            type="file" 
+            id="incidentImage" 
+            multiple 
+            accept="image/*"
+        ><small>Tối đa 5 ảnh</small>
 
         <br><br>
 
@@ -202,6 +215,7 @@ function openReportForm() {
 async function submitReport() {
 
     const type = document.getElementById("incidentType").value;
+    const description = document.getElementById("incidentDesc").value;
 
     if (!type) {
         alert("Hãy chọn loại sự cố");
@@ -209,33 +223,36 @@ async function submitReport() {
     }
 
     const fileInput = document.getElementById("incidentImage");
-    let imageURL = "";
 
-    // =====================================================
-    // UPLOAD IMAGE
-    // =====================================================
+    let imageURLs = [];
 
     if (fileInput.files.length > 0) {
 
-        const file = fileInput.files[0];
+        if (fileInput.files.length > 5) {
+            alert("Chỉ được tối đa 5 ảnh");
+            return;
+        }
 
-        const fileName = Date.now() + "_" + file.name;
+        for (const file of fileInput.files) {
 
-        const { data, error } = await supabaseClient
-        .storage
-        .from("road-images")
-        .upload(fileName, file);
+            const fileName = Date.now() + "_" + file.name;
 
-        if(error){
-            console.log("Upload lỗi:", error);
-        }else{
+            const { error } = await supabaseClient
+                .storage
+                .from("road-images")
+                .upload(fileName, file);
 
-            const { data: publicURL } = supabaseClient
-            .storage
-            .from("road-images")
-            .getPublicUrl(fileName);
+            if (error) {
+                console.log("Upload lỗi:", error);
+                continue;
+            }
 
-            imageURL = publicURL.publicUrl;
+            const { data } = supabaseClient
+                .storage
+                .from("road-images")
+                .getPublicUrl(fileName);
+
+            imageURLs.push(data.publicUrl);
 
         }
 
@@ -246,18 +263,19 @@ async function submitReport() {
     // =====================================================
 
     const { error } = await supabaseClient
-    .from("road_events")
-    .insert([
-        {
-            lat: reportLatLng.lat,
-            lng: reportLatLng.lng,
-            type: type,
-            image_url: imageURL,
-            status: "pending"
-        }
-    ]);
+        .from("road_events")
+        .insert([
+            {
+                lat: reportLatLng.lat,
+                lng: reportLatLng.lng,
+                type: type,
+                description: description,
+                image_url: JSON.stringify(imageURLs),
+                status: "pending"
+            }
+        ]);
 
-    if(error){
+    if (error) {
         console.log("Lỗi lưu DB:", error);
         alert("❌ Không gửi được báo cáo");
         return;
@@ -273,14 +291,14 @@ async function submitReport() {
 }
 
 
-async function loadIncidents(){
+async function loadIncidents() {
 
     const { data, error } = await supabaseClient
-    .from("road_events")
-    .select("*")
-    .eq("status","approved");
+        .from("road_events")
+        .select("*")
+        .eq("status", "approved");
 
-    if(error){
+    if (error) {
         console.log(error);
         return;
     }
@@ -293,15 +311,41 @@ async function loadIncidents(){
 
         const marker = L.marker(
             [row.lat, row.lng],
-            {icon: icon}
+            { icon: icon }
         ).addTo(map);
 
         marker.incidentType = row.type;
 
         let popup = "<b>Sự cố:</b> " + row.type;
 
-        if(row.image_url){
-            popup += `<br><img src="${row.image_url}" width="120">`;
+        if (row.description) {
+            popup += "<br><b>Mô tả:</b> " + row.description;
+        }
+
+        if (row.image_url) {
+
+            let images = [];
+
+            try {
+                images = JSON.parse(row.image_url);
+            } catch {
+                images = [row.image_url];
+            }
+
+            popup += "<br>";
+
+            images.forEach(img => {
+
+                popup += `
+        <img 
+            src="${img}" 
+            width="80"
+            style="margin:3px;border-radius:4px"
+        >
+        `;
+
+            });
+
         }
 
         marker.bindPopup(popup);
@@ -384,7 +428,7 @@ function createEndIcon() {
 
 document.getElementById("routeBtn").onclick = function () {
 
-    if(selectingRoute || routingControl){
+    if (selectingRoute || routingControl) {
         cancelRoute();
         this.innerText = "🧭 Chỉ đường";
         return;
@@ -407,14 +451,14 @@ document.getElementById("routeBtn").onclick = function () {
 // SNAP TO ROAD (điều chỉnh điểm người dùng chọn cho chính xác trên đường)
 // =====================================================
 
-async function snapToRoad(lat, lng){
+async function snapToRoad(lat, lng) {
 
     const url = `https://router.project-osrm.org/nearest/v1/driving/${lng},${lat}`;
 
     const res = await fetch(url);
     const data = await res.json();
 
-    if(data.waypoints && data.waypoints.length > 0){
+    if (data.waypoints && data.waypoints.length > 0) {
 
         const snapped = data.waypoints[0].location;
 
@@ -425,7 +469,7 @@ async function snapToRoad(lat, lng){
 
     }
 
-    return {lat, lng};
+    return { lat, lng };
 }
 
 
@@ -435,7 +479,7 @@ async function snapToRoad(lat, lng){
 
 map.on("click", function (e) {
 
-    if(drawMode) return;
+    if (drawMode) return;
 
     if (!selectingRoute) return;
 
@@ -578,7 +622,7 @@ function isPointInPolygon(point, polygon) {
 // =====================================================
 // DISTANCE TO SEGMENT (để tính khoảng cách từ điểm đến đường đi)
 // =====================================================
-function distanceToSegment(p, p1, p2){
+function distanceToSegment(p, p1, p2) {
 
     const x = p.lng;
     const y = p.lat;
@@ -599,21 +643,21 @@ function distanceToSegment(p, p1, p2){
 
     let param = -1;
 
-    if(len_sq !== 0){
+    if (len_sq !== 0) {
         param = dot / len_sq;
     }
 
     let xx, yy;
 
-    if(param < 0){
+    if (param < 0) {
         xx = x1;
         yy = y1;
     }
-    else if(param > 1){
+    else if (param > 1) {
         xx = x2;
         yy = y2;
     }
-    else{
+    else {
         xx = x1 + param * C;
         yy = y1 + param * D;
     }
@@ -621,55 +665,55 @@ function distanceToSegment(p, p1, p2){
     const dx = x - xx;
     const dy = y - yy;
 
-    return Math.sqrt(dx*dx + dy*dy);
+    return Math.sqrt(dx * dx + dy * dy);
 }
 
 // =====================================================
 // TÍNH CÁC SỰ CỐ TRÊN TUYẾN ĐƯỜNG
 // =====================================================
-function calculateRouteIncidents(routeCoords){
+function calculateRouteIncidents(routeCoords) {
 
-    let pothole=0;
-    let flood=0;
-    let construction=0;
-    let danger=0;
+    let pothole = 0;
+    let flood = 0;
+    let construction = 0;
+    let danger = 0;
 
     const buffer = 0.0001; // ~10m
 
-    markers.forEach(m=>{
+    markers.forEach(m => {
 
         const pos = m.getLatLng();
         let nearRoute = false;
 
-        for(let i=0;i<routeCoords.length-1;i++){
+        for (let i = 0; i < routeCoords.length - 1; i++) {
 
             const d = distanceToSegment(
                 pos,
                 routeCoords[i],
-                routeCoords[i+1]
+                routeCoords[i + 1]
             );
 
-            if(d < buffer){
+            if (d < buffer) {
                 nearRoute = true;
                 break;
             }
 
         }
 
-        if(nearRoute){
+        if (nearRoute) {
 
             const type = m.incidentType;
 
-            if(type==="Hố gà") pothole++;
-            if(type==="Lũ lụt") flood++;
-            if(type==="Xây dựng") construction++;
-            if(type==="Nguy hiểm") danger++;
+            if (type === "Hố gà") pothole++;
+            if (type === "Lũ lụt") flood++;
+            if (type === "Thi Công") construction++;
+            if (type === "Nguy hiểm") danger++;
 
         }
 
     });
 
-    updateDashboard(pothole,flood,construction,danger);
+    updateDashboard(pothole, flood, construction, danger);
 
 }
 
@@ -677,21 +721,21 @@ function calculateRouteIncidents(routeCoords){
 // CANCEL ROUTE
 // =====================================================
 
-function cancelRoute(){
+function cancelRoute() {
 
     selectingRoute = false;
 
-    if(routingControl){
+    if (routingControl) {
         map.removeControl(routingControl);
         routingControl = null;
     }
 
-    if(startMarker){
+    if (startMarker) {
         map.removeLayer(startMarker);
         startMarker = null;
     }
 
-    if(endMarker){
+    if (endMarker) {
         map.removeLayer(endMarker);
         endMarker = null;
     }
@@ -726,11 +770,11 @@ function updateDashboard(pothole, flood, construction, danger) {
 // DRAW BUTTON
 // =====================================================
 
-document.getElementById("drawBtn").onclick = function(){
+document.getElementById("drawBtn").onclick = function () {
 
     drawMode = !drawMode;
 
-    if(drawMode){
+    if (drawMode) {
 
         this.innerText = "❌ Huỷ vẽ";
 
@@ -738,13 +782,13 @@ document.getElementById("drawBtn").onclick = function(){
         map.dragging.disable();
 
         alert(
-        "✏️ Chế độ khoanh vùng\n\n"+
-        "• Nhấn giữ chuột để vẽ\n"+
-        "• Thả chuột để hoàn thành vùng\n"+
-        "• Có thể vẽ nhiều khu vực"
+            "✏️ Chế độ khoanh vùng\n\n" +
+            "• Nhấn giữ chuột để vẽ\n" +
+            "• Thả chuột để hoàn thành vùng\n" +
+            "• Có thể vẽ nhiều khu vực"
         );
 
-    }else{
+    } else {
 
         this.innerText = "✏️ Khoanh vùng";
 
@@ -762,61 +806,61 @@ document.getElementById("drawBtn").onclick = function(){
 // FREEHAND DRAW EVENTS
 // =====================================================
 
-map.on("mousedown", function(e){
+map.on("mousedown", function (e) {
 
-    if(!drawMode) return;
+    if (!drawMode) return;
 
     isDrawing = true;
 
     drawPoints = [e.latlng];
 
-    if(drawLayer){
+    if (drawLayer) {
         map.removeLayer(drawLayer);
     }
 
 });
 
-map.on("mousemove", function(e){
+map.on("mousemove", function (e) {
 
-    if(!isDrawing) return;
+    if (!isDrawing) return;
 
-    const last = drawPoints[drawPoints.length-1];
+    const last = drawPoints[drawPoints.length - 1];
 
-    if(!last || last.distanceTo(e.latlng) > 5){
+    if (!last || last.distanceTo(e.latlng) > 5) {
         drawPoints.push(e.latlng);
     }
 
-    if(drawLayer){
+    if (drawLayer) {
         map.removeLayer(drawLayer);
     }
 
-    drawLayer = L.polyline(drawPoints,{
-        color:"#ff5500",
-        weight:3
+    drawLayer = L.polyline(drawPoints, {
+        color: "#ff5500",
+        weight: 3
     }).addTo(map);
 
 });
 
-map.on("mouseup", function(){
+map.on("mouseup", function () {
 
-    if(!isDrawing) return;
+    if (!isDrawing) return;
 
     isDrawing = false;
 
-    if(drawPoints.length < 3){
+    if (drawPoints.length < 3) {
         return;
     }
 
     drawPoints.push(drawPoints[0]);
 
-    if(drawLayer){
+    if (drawLayer) {
         map.removeLayer(drawLayer);
     }
 
-    var polygon = L.polygon(drawPoints,{
-        color:"#ff5500",
-        weight:2,
-        fillOpacity:0.15
+    var polygon = L.polygon(drawPoints, {
+        color: "#ff5500",
+        weight: 2,
+        fillOpacity: 0.15
     }).addTo(map);
 
     drawnAreas.push(polygon);
@@ -829,7 +873,7 @@ map.on("mouseup", function(){
 // TÍNH TỔNG CẢNH BÁO TRÊN TOÀN BẢN ĐỒ
 // =====================================================
 
-function calculateAllIncidents(){
+function calculateAllIncidents() {
 
     let pothole = 0;
     let flood = 0;
@@ -840,10 +884,10 @@ function calculateAllIncidents(){
 
         const type = m.incidentType || "Hố gà";
 
-        if(type === "Hố gà") pothole++;
-        if(type === "Lũ lụt") flood++;
-        if(type === "Xây dựng") construction++;
-        if(type === "Nguy hiểm") danger++;
+        if (type === "Hố gà") pothole++;
+        if (type === "Lũ lụt") flood++;
+        if (type === "Xây dựng") construction++;
+        if (type === "Nguy hiểm") danger++;
 
     });
 
@@ -856,43 +900,43 @@ function calculateAllIncidents(){
 // TÍNH TỔNG CẢNH BÁO TRONG CÁC VÙNG
 // =====================================================
 
-function calculateAllAreas(){
+function calculateAllAreas() {
 
-    var pothole=0;
-    var flood=0;
-    var construction=0;
-    var danger=0;
+    var pothole = 0;
+    var flood = 0;
+    var construction = 0;
+    var danger = 0;
 
-    markers.forEach(function(m){
+    markers.forEach(function (m) {
 
         var pos = m.getLatLng();
         var insideAnyArea = false;
 
-        drawnAreas.forEach(function(area){
+        drawnAreas.forEach(function (area) {
 
-            if(isPointInPolygon(pos,area)){
+            if (isPointInPolygon(pos, area)) {
                 insideAnyArea = true;
             }
 
         });
 
-        if(insideAnyArea){
+        if (insideAnyArea) {
 
             var type = m.incidentType || "Hố gà";
 
-            if(type==="Hố gà") pothole++;
-            if(type==="Lũ lụt") flood++;
-            if(type==="Xây dựng") construction++;
-            if(type==="Nguy hiểm") danger++;
+            if (type === "Hố gà") pothole++;
+            if (type === "Lũ lụt") flood++;
+            if (type === "Xây dựng") construction++;
+            if (type === "Nguy hiểm") danger++;
 
         }
 
     });
 
-    updateDashboard(pothole,flood,construction,danger);
+    updateDashboard(pothole, flood, construction, danger);
 
     document.getElementById("dashboard")
-    .classList.remove("route-active");
+        .classList.remove("route-active");
 
 }
 
@@ -901,15 +945,15 @@ function calculateAllAreas(){
 // CLEAR ALL DRAWINGS
 // =====================================================
 
-function clearAllDrawings(){
+function clearAllDrawings() {
 
-    drawnAreas.forEach(function(area){
+    drawnAreas.forEach(function (area) {
         map.removeLayer(area);
     });
 
     drawnAreas = [];
 
-    if(drawLayer){
+    if (drawLayer) {
         map.removeLayer(drawLayer);
     }
 
@@ -948,19 +992,19 @@ const supabaseKey = "sb_publishable_xsqRVFRoQSh0c9wzwc5vxA_Hw9aj9fF";
 
 // 2. Tạo client kết nối database
 const supabaseClient = window.supabase.createClient(
-  supabaseUrl,
-  supabaseKey
+    supabaseUrl,
+    supabaseKey
 );
 
 // 3. Hàm test đọc dữ liệu từ bảng
 async function testDB() {
 
-  const { data, error } = await supabaseClient
-    .from("road_events")
-    .select("*");
+    const { data, error } = await supabaseClient
+        .from("road_events")
+        .select("*");
 
-  console.log("DATA:", data);
-  console.log("ERROR:", error);
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
 
 }
 
