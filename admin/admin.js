@@ -59,7 +59,7 @@ card.innerHTML = `
 
 <b>Loại:</b> ${r.type}<br>
 <b>Tọa độ:</b> ${lat.toFixed(5)}, ${lng.toFixed(5)}<br>
-<b>Status:</b> ${r.status}
+<b>Status:</b> ${r.status}<br>
 
 ${r.image_url ? 
 `<img src="https://sweqvobmlntyhyeuurfr.supabase.co/storage/v1/object/public/incident-images/${r.image_url}" class="report-img">` 

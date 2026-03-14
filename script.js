@@ -117,7 +117,7 @@ map.on("zoomend", function () {
 
     markers.forEach(m => {
 
-        const type = m.incidentType || "pothole";
+        const type = m.incidentType || "Hố gà";
         m.setIcon(createIcon(ICONS[type], size));
 
     });
@@ -183,10 +183,10 @@ function openReportForm() {
 
         <select id="incidentType">
             <option value="">-- chọn loại --</option>
-            <option value="pothole">🚧 Hố gà</option>
-            <option value="flood">🌊 Ngập nước</option>
-            <option value="construction">🏗️ Thi công</option>
-            <option value="danger">⚠️ Nguy hiểm</option>
+            <option value="Hố gà">🚧 Hố gà</option>
+            <option value="Lũ lụt">🌊 Ngập nước</option>
+            <option value="Xây dựng">🏗️ Thi công</option>
+            <option value="Nguy hiểm">⚠️ Nguy hiểm</option>
         </select>
 
         <br><br>
@@ -235,7 +235,7 @@ async function submitReport() {
 
         const { data, error } = await supabaseClient
         .storage
-        .from("incident-images")
+        .from("road-images")
         .upload(fileName, file);
 
         if(error){
@@ -244,7 +244,7 @@ async function submitReport() {
 
             const { data: publicURL } = supabaseClient
             .storage
-            .from("incident-images")
+            .from("road-images")
             .getPublicUrl(fileName);
 
             imageURL = publicURL.publicUrl;
@@ -569,6 +569,8 @@ function updateDashboard(pothole, flood, construction, danger) {
 
     document.getElementById("potholeRoute").innerText = pothole;
     document.getElementById("floodRoute").innerText = flood;
+    document.getElementById("constructionRoute").innerText = construction;
+    document.getElementById("dangerRoute").innerText = danger;
     document.getElementById("warningRoute").innerText = total;
 
 }
@@ -704,12 +706,12 @@ function calculateAllAreas(){
 
         if(insideAnyArea){
 
-            var type = m.incidentType || "pothole";
+            var type = m.incidentType || "Hố gà";
 
-            if(type==="pothole") pothole++;
-            if(type==="flood") flood++;
-            if(type==="construction") construction++;
-            if(type==="danger") danger++;
+            if(type==="Hố gà") pothole++;
+            if(type==="Lũ lụt") flood++;
+            if(type==="Xây dựng") construction++;
+            if(type==="Nguy hiểm") danger++;
 
         }
 
