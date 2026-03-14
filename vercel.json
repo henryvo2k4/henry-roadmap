@@ -5,8 +5,8 @@
       "dest": "/admin/admin.html"
     },
     {
-      "src": "/henry",
-      "dest": "/admin/admin.html"
+      "src": "/admin/admin.html",
+      "dest": "/henry"
     }
   ]
 }
