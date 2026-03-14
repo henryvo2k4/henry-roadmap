@@ -794,8 +794,7 @@ document.getElementById("drawBtn").onclick = function () {
 
         // tắt kéo bản đồ
         map.dragging.disable();
-        map.touchZoom.disable();
-        map.doubleClickZoom.disable();
+        
 
         alert(
             "✏️ Chế độ khoanh vùng\n\n" +
@@ -810,8 +809,6 @@ document.getElementById("drawBtn").onclick = function () {
 
         // bật lại kéo bản đồ
         map.dragging.enable();
-        map.touchZoom.enable();
-        map.doubleClickZoom.enable();
 
         clearAllDrawings();
 
