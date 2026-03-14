@@ -1,8 +1,8 @@
 {
-  "routes": [
+  "rewrites": [
     {
-      "src": "/admin",
-      "dest": "/admin/admin.html"
+      "source": "/admin",
+      "destination": "/admin/admin.html"
     }
   ]
 }
