@@ -77,10 +77,10 @@ function createIcon(url, size) {
 }
 
 const ICONS = {
-    pothole: "https://cdn-icons-png.flaticon.com/512/1684/1684423.png",
-    flood: "https://cdn-icons-png.flaticon.com/512/1576/1576457.png",
-    construction: "https://cdn-icons-png.flaticon.com/512/4930/4930409.png",
-    danger: "https://cdn-icons-png.flaticon.com/512/564/564619.png"
+    "Hố gà": "https://cdn-icons-png.flaticon.com/512/1684/1684423.png",
+    "Lũ lụt": "https://cdn-icons-png.flaticon.com/512/1576/1576457.png",
+    "Xây dựng": "https://cdn-icons-png.flaticon.com/512/4930/4930409.png",
+    "Nguy hiểm": "https://cdn-icons-png.flaticon.com/512/564/564619.png"
 };
 
 
@@ -91,20 +91,6 @@ const ICONS = {
 let markers = [];
 let tempMarker = null;
 let reportLatLng = null;
-
-
-// =====================================================
-// DEMO MARKER
-// =====================================================
-
-const demoMarker = L.marker(
-    [10.8231, 106.6297],
-    { icon: createIcon(ICONS.pothole, getIconSize()) }
-).addTo(map);
-
-demoMarker.bindPopup("🚧 Phát hiện hố gà");
-
-markers.push(demoMarker);
 
 
 // =====================================================
