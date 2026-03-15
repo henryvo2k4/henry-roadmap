@@ -910,14 +910,13 @@ map.on("touchstart", function (e) {
 
     if (!drawMode) return;
 
-    // nếu nhiều hơn 1 ngón → cho zoom
-    if (e.originalEvent.touches.length > 1) {
-        return;
-    }
+    if (e.originalEvent.touches.length > 1) return;
+
+    e.originalEvent.preventDefault();
 
     isDrawing = true;
 
-    const latlng = e.latlng;
+    const latlng = map.mouseEventToLatLng(e.originalEvent.touches[0]);
 
     drawPoints = [latlng];
 
@@ -931,13 +930,13 @@ map.on("touchmove", function (e) {
 
     if (!isDrawing) return;
 
-    e.originalEvent.preventDefault(); // QUAN TRỌNG
+    e.originalEvent.preventDefault();
 
-    const latlng = e.latlng;
+    const latlng = map.mouseEventToLatLng(e.originalEvent.touches[0]);
 
     const last = drawPoints[drawPoints.length - 1];
 
-    if (!last || last.distanceTo(latlng) > 2) {
+    if (!last || last.distanceTo(latlng) > 5) {
         drawPoints.push(latlng);
     }
 
@@ -958,7 +957,15 @@ map.on("touchend", function (e) {
 
     isDrawing = false;
 
+    const touch = e.originalEvent.changedTouches[0];
+
+    const latlng = map.mouseEventToLatLng(touch);
+
+    drawPoints.push(latlng); // thêm điểm cuối
+
     if (drawPoints.length < 3) return;
+
+    drawPoints.push(drawPoints[0]); // đóng polygon
 
     if (drawLayer) {
         map.removeLayer(drawLayer);
