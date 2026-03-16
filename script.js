@@ -4,7 +4,8 @@
 
 const map = L.map("map", {
     zoomControl: false,
-    doubleClickZoom: false
+    doubleClickZoom: false,
+    tap: false
 }).setView([10.8231, 106.6297], 13);
 
 
@@ -811,10 +812,6 @@ document.getElementById("drawBtn").onclick = function () {
         map.boxZoom.disable();
         map.keyboard.disable();
 
-        if (map.tap) map.tap.disable();
-
-
-
         alert(
             "✏️ Chế độ khoanh vùng\n\n" +
             "• Nhấn giữ chuột để vẽ\n" +
@@ -833,9 +830,6 @@ document.getElementById("drawBtn").onclick = function () {
         map.scrollWheelZoom.enable();
         map.boxZoom.enable();
         map.keyboard.enable();
-        
-        // Bật lại trình xử lý tap
-        if (map.tap) map.tap.enable()
 
         clearAllDrawings();
 
@@ -911,7 +905,6 @@ map.on("mouseup", function () {
     calculateAllAreas();
 
 });
-
 
 // =====================================================
 // TOUCH EVENTS 
