@@ -7,7 +7,6 @@ const map = L.map("map", {
     doubleClickZoom: false
 }).setView([10.8231, 106.6297], 13);
 
-map.getContainer().style.touchAction = "none";
 
 map.getContainer().addEventListener(
     "touchmove",
@@ -808,6 +807,12 @@ document.getElementById("drawBtn").onclick = function () {
         map.dragging.disable();
         map.touchZoom.disable();
         map.doubleClickZoom.disable();
+        map.scrollWheelZoom.disable();
+        map.boxZoom.disable();
+        map.keyboard.disable();
+
+        if (map.tap) map.tap.disable();
+
 
 
         alert(
@@ -825,6 +830,12 @@ document.getElementById("drawBtn").onclick = function () {
         map.dragging.enable();
         map.touchZoom.enable();
         map.doubleClickZoom.enable();
+        map.scrollWheelZoom.enable();
+        map.boxZoom.enable();
+        map.keyboard.enable();
+        
+        // Bật lại trình xử lý tap
+        if (map.tap) map.tap.enable()
 
         clearAllDrawings();
 
@@ -901,74 +912,76 @@ map.on("mouseup", function () {
 
 });
 
+
 // =====================================================
-// TOUCH EVENTS
+// TOUCH EVENTS 
 // =====================================================
 
+const mapContainer = map.getContainer();
 
-map.on("touchstart", function (e) {
-
+mapContainer.addEventListener("touchstart", function (e) {
     if (!drawMode) return;
+    if (e.touches.length !== 1) return; // chỉ xử lý 1 ngón
 
-    if (e.originalEvent.touches.length > 1) return;
-
-    e.originalEvent.preventDefault();
+    e.preventDefault();
+    e.stopPropagation();
 
     isDrawing = true;
 
-    const latlng = map.mouseEventToLatLng(e.originalEvent.touches[0]);
-
+    const latlng = map.mouseEventToLatLng(e.touches[0]);
     drawPoints = [latlng];
 
     if (drawLayer) {
         map.removeLayer(drawLayer);
+        drawLayer = null;
     }
 
-});
+}, { passive: false, capture: true }); // capture: true để bắt trước Leaflet
 
-map.on("touchmove", function (e) {
 
-    if (!isDrawing) return;
+mapContainer.addEventListener("touchmove", function (e) {
+    if (!drawMode || !isDrawing) return;
+    if (e.touches.length !== 1) return;
 
-    e.originalEvent.preventDefault();
+    e.preventDefault();
+    e.stopPropagation();
 
-    const latlng = map.mouseEventToLatLng(e.originalEvent.touches[0]);
-
+    const latlng = map.mouseEventToLatLng(e.touches[0]);
     const last = drawPoints[drawPoints.length - 1];
 
     if (!last || last.distanceTo(latlng) > 5) {
         drawPoints.push(latlng);
     }
 
-    if (drawLayer) {
-        map.removeLayer(drawLayer);
-    }
+    if (drawLayer) map.removeLayer(drawLayer);
 
     drawLayer = L.polyline(drawPoints, {
         color: "#ff5500",
         weight: 3
     }).addTo(map);
 
-});
+}, { passive: false, capture: true });
 
-map.on("touchend", function (e) {
 
-    if (!isDrawing) return;
+mapContainer.addEventListener("touchend", function (e) {
+    if (!drawMode || !isDrawing) return;
+
+    e.preventDefault();
+    e.stopPropagation();
 
     isDrawing = false;
 
-    const touch = e.originalEvent.changedTouches[0];
+    if (drawPoints.length < 3) {
+        drawPoints = [];
+        return;
+    }
 
-    const latlng = map.mouseEventToLatLng(touch);
-
-    drawPoints.push(latlng); // thêm điểm cuối
-
-    if (drawPoints.length < 3) return;
-
-    drawPoints.push(drawPoints[0]); // đóng polygon
+    // Đóng polygon
+    drawPoints.push(drawPoints[0]);
 
     if (drawLayer) {
         map.removeLayer(drawLayer);
+        drawLayer = null;
     }
 
     const polygon = L.polygon(drawPoints, {
@@ -978,10 +991,12 @@ map.on("touchend", function (e) {
     }).addTo(map);
 
     drawnAreas.push(polygon);
-
     calculateAllAreas();
 
-});
+    drawPoints = [];
+
+}, { passive: false, capture: true });
+
 
 // =====================================================
 // TÍNH TỔNG CẢNH BÁO TRÊN TOÀN BẢN ĐỒ

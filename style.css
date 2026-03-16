@@ -487,6 +487,6 @@ fill-opacity:0.25;
 }
 
 #map {
-    touch-action: pan-x pan-y;
+    touch-action: none !important
 }
 
