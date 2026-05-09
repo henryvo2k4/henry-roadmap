@@ -53,9 +53,14 @@ var drawnAreas = [];
 
 const geocoder = L.Control.geocoder({
     placeholder: "🔎 Tìm địa điểm...",
-    defaultMarkGeocode: true,
+    defaultMarkGeocode: false, // Tắt tự động zoom/vẽ mặc định để chúng ta tự can thiệp
     position: "topleft",
-    collapsed: false
+    collapsed: false,
+    geocoder: L.Control.Geocoder.nominatim({
+        geocodingQueryParams: {
+            polygon_geojson: 1 // Yêu cầu API OpenStreetMap trả về đường viền ranh giới (Polygon)
+        }
+    })
 }).addTo(map);
 
 
@@ -1139,23 +1144,53 @@ function clearAllDrawings() {
 
 
 // =====================================================
-// SEARCH → KHOANH VÙNG
+// SEARCH → KHOANH VÙNG (Vẽ theo ranh giới hành chính)
 // =====================================================
 
 geocoder.on("markgeocode", function (e) {
+    
+    // 1. Di chuyển bản đồ đến khu vực vừa tìm
+    map.fitBounds(e.geocode.bbox);
 
-    const bbox = e.geocode.bbox;
+    // 2. Lấy dữ liệu ranh giới (Polygon GeoJSON) từ API
+    const geojson = e.geocode.properties.geojson;
 
-    const bounds = L.latLngBounds(bbox);
+    // 3. Kiểm tra xem khu vực này có ranh giới cụ thể không (Quận, Phường, Tỉnh...)
+    if (geojson && (geojson.type === "Polygon" || geojson.type === "MultiPolygon")) {
+        
+        // Phân tích dữ liệu GeoJSON thành các lớp Polygon của Leaflet
+        const geojsonLayer = L.geoJSON(geojson);
+        
+        // Tách từng vùng ra để vẽ (đảm bảo tương thích hoàn hảo với hàm tính toán của bạn)
+        geojsonLayer.eachLayer(function (layer) {
+            if (layer instanceof L.Polygon) {
+                // Áp dụng màu sắc giống hệt nét vẽ tay của bạn
+                layer.setStyle({
+                    color: "#2b8cff",
+                    weight: 2,
+                    fillOpacity: 0.15
+                });
+                
+                // Vẽ lên bản đồ và đẩy vào mảng tính toán
+                layer.addTo(map);
+                drawnAreas.push(layer);
+            }
+        });
 
-    const rect = L.rectangle(bounds, {
-        color: "#2b8cff",
-        weight: 2
-    }).addTo(map);
+    } else {
+        // 4. Fallback: Nếu tìm số nhà/quán ăn (không có ranh giới hành chính) -> Vẽ hình vuông bao quanh như cũ
+        const bounds = L.latLngBounds(e.geocode.bbox);
+        const rect = L.rectangle(bounds, {
+            color: "#2b8cff",
+            weight: 2,
+            fillOpacity: 0.15
+        }).addTo(map);
 
-    drawnAreas.push(rect);
+        drawnAreas.push(rect);
+    }
+
+    // 5. Cập nhật lại số lượng sự cố nằm trong vùng
     calculateAllAreas();
-
 });
 
 function switchTab(tabName) {
