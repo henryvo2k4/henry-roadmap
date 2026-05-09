@@ -29,17 +29,26 @@
 <div class="container">
 
     <!-- SIDEBAR -->
+
+
     <div class="sidebar">
 
-        <h2>🚦 Báo cáo người dùng</h2>
+        <div class="sidebar-header">
+            <h2>🚦 Quản lý báo cáo</h2>
+            
+            <div class="admin-profile">
+                <span id="adminInfo"></span>
+                <button class="logout-btn" onclick="logout()">
+                    Đăng xuất
+                </button>
+            </div>
+        </div>
 
-        <!-- hiển thị email admin -->
-        <div id="adminInfo"></div>
-
-        <button onclick="logout()">Logout</button>
-
-        <hr>
-
+        <div class="filter-buttons">
+            <button id="btn-pending" class="filter-btn active" onclick="setFilter('pending')">Chưa Duyệt</button>
+            <button id="btn-approved" class="filter-btn" onclick="setFilter('approved')">Đã Duyệt</button>
+            <button id="btn-all" class="filter-btn" onclick="setFilter('all')">Tất cả</button>
+        </div>
         <div id="reportList"></div>
 
     </div>
@@ -78,7 +87,7 @@ async function checkLogin(){
 
     // hiển thị email admin
     document.getElementById("adminInfo").innerHTML =
-        "Admin: " + session.user.email;
+        session.user.email;
 
     // chỉ khi login thành công mới load admin.js
     const script = document.createElement("script");

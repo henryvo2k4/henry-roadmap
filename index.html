@@ -4,6 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Henry Road Monitor</title>
 
 <link rel="stylesheet" href="style.css">
@@ -34,12 +35,11 @@ href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css
 
 <!-- NÚT CHỨC NĂNG -->
 
-<button id="gpsBtn">📍 Vị trí của tôi</button>
+<button id="gpsBtn">📍 <span class="btn-text">Vị trí của tôi</span></button>
 
-<button id="routeBtn">🧭 Chỉ đường</button>
+<button id="routeBtn">🧭 <span class="btn-text">Chỉ đường</span></button>
 
-<button id="drawBtn">✏️ Khoanh vùng</button>
-
+<button id="drawBtn">✏️ <span class="btn-text">Khoanh vùng</span></button>
 
 
 <!-- BẢN ĐỒ -->
@@ -51,38 +51,26 @@ href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css
 <!-- DASHBOARD -->
 
 <div id="dashboard">
+    <div id="dashboard-tabs">
+        <button id="tab-stats" class="active" onclick="switchTab('stats')">⚠️ Cảnh báo</button>
+        <button id="tab-steps" onclick="switchTab('steps')">🧭 Chỉ đường</button>
+    </div>
 
-<h3>🧭 Thông tin cảnh báo</h3>
+    <h3 id="dashboard-title">🧭 Thông tin cảnh báo</h3>
 
-<div id="dashboardGrid">
+    <div id="dashboardGrid">
+        <div id="routeSteps">
+            <p>Chưa có tuyến đường</p>
+        </div>
 
-<!-- CỘT 1: HƯỚNG DẪN -->
-
-<div id="routeSteps">
-
-<p>Chưa có tuyến đường</p>
-
-</div>
-
-
-<!-- CỘT 2: THỐNG KÊ -->
-
-<div id="routeStats">
-
-<p>🕳 Ổ gà: <span id="potholeRoute">0</span></p>
-
-<p>🌊 Ngập nước: <span id="floodRoute">0</span></p>
-
-<p>🏗️ Thi công: <span id="constructionRoute">0</span></p>
-
-<p>⚠️ Nguy hiểm: <span id="dangerRoute">0</span></p>
-
-<p>🗂️ Tổng cảnh báo: <span id="warningRoute">0</span></p>
-
-</div>
-
-</div>
-
+        <div id="routeStats">
+            <p>🕳 Ổ gà: <span id="potholeRoute">0</span></p>
+            <p>🌊 Ngập nước: <span id="floodRoute">0</span></p>
+            <p>🏗️ Thi công: <span id="constructionRoute">0</span></p>
+            <p>⚠️ Nguy hiểm: <span id="dangerRoute">0</span></p>
+            <p>🗂️ Tổng cảnh báo: <span id="warningRoute">0</span></p>
+        </div>
+    </div>
 </div>
 
 

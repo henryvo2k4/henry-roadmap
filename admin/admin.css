@@ -10,20 +10,19 @@ body {
 }
 
 /* SIDEBAR */
-
 .sidebar {
-
     width: 360px;
     background: white;
-
     padding: 15px;
 
-    overflow-y: auto;
+    /* Cấu hình Flexbox để đóng băng Header và cuộn List */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Đóng băng cuộn tổng thể */
 
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.12);
-
     z-index: 1000;
-
 }
 
 .sidebar h2 {
@@ -170,14 +169,17 @@ button:hover {
     display: flex;
     gap: 10px;
     margin-top: 10px;
-    
+
     /* Cấu hình thanh trượt */
-    overflow-x: hidden;  /* Cho phép trượt ngang */
-    overflow-y: hidden; /* Tắt hoàn toàn trượt dọc */
-    
+    overflow-x: hidden;
+    /* Cho phép trượt ngang */
+    overflow-y: hidden;
+    /* Tắt hoàn toàn trượt dọc */
+
     /* Ngăn nội dung bị tràn theo chiều dọc */
-    align-items: center; 
-    padding-bottom: 5px; /* Tạo khoảng trống nhỏ để hiệu ứng phóng to (scale) không bị cắt */
+    align-items: center;
+    padding-bottom: 5px;
+    /* Tạo khoảng trống nhỏ để hiệu ứng phóng to (scale) không bị cắt */
 }
 
 .report-img {
@@ -214,4 +216,167 @@ button:hover {
     max-width: 90%;
     max-height: 90%;
     border-radius: 10px;
+}
+
+/* =====================================================
+FILTER BUTTONS (Nút lọc trạng thái)
+===================================================== */
+.filter-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.filter-btn {
+    flex: 1;
+    background: #e2e8f0;
+    color: #475569;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 8px 5px;
+    font-size: 12px;
+}
+
+.filter-btn.active {
+    background: #3b82f6;
+    color: white;
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+}
+
+/* =====================================================
+HEADER SIDEBAR & PROFILE
+===================================================== */
+.sidebar-header h2 {
+    margin: 0 0 15px 0;
+    font-size: 20px;
+    color: #1e293b;
+    text-align: center;
+}
+
+.admin-profile {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    padding: 10px 12px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
+}
+
+#adminInfo {
+    font-size: 13px;
+    color: #334155;
+    font-weight: 600;
+    word-break: break-all;
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #fee2e2;
+    color: #ef4444;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+    flex: unset;
+    /* Không bị giãn form */
+}
+
+.logout-btn:hover {
+    background: #ef4444;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.2);
+}
+
+/* =====================================================
+DANH SÁCH BÁO CÁO (CHỈ CUỘN PHẦN NÀY)
+===================================================== */
+#reportList {
+    flex: 1;
+    /* Chiếm toàn bộ không gian còn lại ở dưới */
+    overflow-y: auto;
+    /* Kích hoạt thanh cuộn */
+    padding-right: 5px;
+    /* Chừa một khoảng trống cho thanh cuộn */
+}
+
+/* Custom thanh cuộn cho mượt và đẹp */
+#reportList::-webkit-scrollbar {
+    width: 6px;
+}
+
+#reportList::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+#reportList::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* =====================================================
+MOBILE RESPONSIVE (Dành cho Admin)
+===================================================== */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        /* Đổi hướng dàn trang thành dọc */
+    }
+
+    #map {
+        height: 50vh;
+        /* Bản đồ chiếm 50% nửa trên */
+        width: 100%;
+        order: 1;
+        /* Ưu tiên hiển thị trên */
+    }
+
+    .sidebar {
+        width: 100%;
+        height: 50vh;
+        padding: 10px;
+        /* Danh sách báo cáo chiếm 50% nửa dưới */
+        box-sizing: border-box;
+        order: 2;
+        /* Hiển thị bên dưới */
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
+        z-index: 1001;
+        /* Đè lên map một chút cho đẹp */
+    }
+
+    .admin-profile {
+        display: flex;
+        justify-content: 0;
+        align-items: center;
+        background: #f8fafc;
+        padding: 1px 12px;
+        border-radius: 12px;
+        margin-bottom: 5px;
+        border: 1px solid #e2e8f0;
+
+    }
+
+    .sidebar-header h2 {
+        margin: 0 0 2px 0;
+        font-size: 20px;
+        color: #1e293b;
+        text-align: center;
+    }
+
+    .filter-buttons {
+        margin-bottom: 5px;
+    }
+
+    .buttons {
+        flex-wrap: wrap;
+        /* Tránh các nút thao tác bị ép quá nhỏ */
+    }
 }

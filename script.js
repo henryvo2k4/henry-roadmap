@@ -304,6 +304,10 @@ async function submitReport() {
 }
 
 
+// =====================================================
+// LOAD INCIDENTS (Tự động Snap to Road & Gộp điểm dưới 10m)
+// =====================================================
+
 async function loadIncidents() {
 
     const { data, error } = await supabaseClient
@@ -316,72 +320,111 @@ async function loadIncidents() {
         return;
     }
 
-    data.forEach(row => {
+    let rawPoints = [];
 
+    // 1. Kéo tất cả các điểm vào đường trước
+    for (const row of data) {
+        const snappedCoords = await snapToRoad(row.lat, row.lng);
+        rawPoints.push({
+            ...row,
+            lat: snappedCoords.lat,
+            lng: snappedCoords.lng
+        });
+    }
+
+    // 2. Thuật toán gộp các điểm (Cùng loại & cách nhau <= 10m)
+    let groupedPoints = [];
+
+    for (const pt of rawPoints) {
+        let foundGroup = false;
+        const ptLatLng = L.latLng(pt.lat, pt.lng);
+
+        for (let group of groupedPoints) {
+            const groupLatLng = L.latLng(group.lat, group.lng);
+            
+            // Nếu khoảng cách <= 10 mét và cùng loại sự cố thì gộp chung vào group
+            if (groupLatLng.distanceTo(ptLatLng) <= 10 && group.type === pt.type) {
+                group.incidents.push(pt);
+                group.count++;
+                foundGroup = true;
+                break;
+            }
+        }
+
+        // Nếu điểm này không nằm gần nhóm nào đã có, tạo nhóm mới
+        if (!foundGroup) {
+            groupedPoints.push({
+                lat: pt.lat,
+                lng: pt.lng,
+                type: pt.type,
+                count: 1,
+                incidents: [pt] // Lưu mảng các báo cáo để tí hiển thị trong Popup
+            });
+        }
+    }
+
+    // 3. Vẽ marker từ danh sách đã gộp
+    for (const group of groupedPoints) {
         const size = getIconSize();
-
-        const icon = createIcon(ICONS[row.type], size);
+        const icon = createIcon(ICONS[group.type], size);
 
         const marker = L.marker(
-            [row.lat, row.lng],
+            [group.lat, group.lng],
             { icon: icon }
         ).addTo(map);
 
-        marker.incidentType = row.type;
+        marker.incidentType = group.type; // Lưu loại sự cố để hàm calculate đếm
 
-        let popup = "<b>Sự cố:</b> " + row.type;
-
-        if (row.created_at) {
-
-            const date = new Date(row.created_at);
-
-            const timeString =
-                date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
-                + " • " +
-                date.toLocaleDateString("vi-VN");
-
-            popup += "<br><b>Thời gian:</b> " + timeString;
-
+        // Tạo nội dung Popup (Có thanh cuộn để tránh bị tràn màn hình nếu gộp quá nhiều)
+        let popupContent = `<div style="max-height: 250px; overflow-y: auto; padding-right: 5px;">`;
+        
+        popupContent += `<b style="font-size:15px;">Sự cố:</b> ${group.type}`;
+        
+        // Nếu có nhiều báo cáo bị gộp, thêm nhãn màu đỏ thông báo
+        if (group.count > 1) {
+            popupContent += ` <span style="color:#ff4d4f; font-weight:bold;">(Gộp ${group.count} báo cáo)</span>`;
         }
 
-        if (row.description) {
-            popup += "<br><b>Mô tả:</b> " + row.description;
-        }
-
-        if (row.image_url) {
-
-            let images = [];
-
-            try {
-                images = JSON.parse(row.image_url);
-            } catch {
-                images = [row.image_url];
+        // Lặp qua từng báo cáo trong nhóm để hiển thị chi tiết (Thời gian, mô tả, ảnh)
+        group.incidents.forEach((inc, index) => {
+            popupContent += `<hr style="margin:8px 0; border: 0.5px solid #eee;">`;
+            
+            if (inc.created_at) {
+                const date = new Date(inc.created_at);
+                const timeString = date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) 
+                                 + " • " + date.toLocaleDateString("vi-VN");
+                popupContent += `<b>Thời gian:</b> ${timeString}<br>`;
             }
 
-            popup += "<br>";
+            if (inc.description) {
+                popupContent += `<b>Mô tả:</b> ${inc.description}<br>`;
+            }
 
-            images.forEach(img => {
+            if (inc.image_url) {
+                let images = [];
+                try {
+                    images = JSON.parse(inc.image_url);
+                } catch {
+                    images = [inc.image_url];
+                }
+                if (images.length > 0) {
+                    popupContent += `<div style="margin-top:5px;">`;
+                    images.forEach(img => {
+                        popupContent += `<img src="${img}" width="70" height="70" style="object-fit: cover; margin:2px; border-radius:4px; border: 1px solid #ddd;">`;
+                    });
+                    popupContent += `</div>`;
+                }
+            }
+        });
 
-                popup += `
-        <img 
-            src="${img}" 
-            width="80"
-            style="margin:3px;border-radius:4px"
-        >
-        `;
+        popupContent += `</div>`; // Đóng thẻ div có thanh cuộn
 
-            });
-
-        }
-
-        marker.bindPopup(popup);
-
+        marker.bindPopup(popupContent);
         markers.push(marker);
+    }
 
-    });
-
+    // Cập nhật lại số liệu cho Dashboard
     calculateAllIncidents();
-
 }
 
 // =====================================================
@@ -456,11 +499,13 @@ document.getElementById("routeBtn").onclick = function () {
 
     if (selectingRoute || routingControl) {
         cancelRoute();
-        this.innerText = "🧭 Chỉ đường";
+        // SỬA DÒNG NÀY
+        this.innerHTML = "🧭 <span class='btn-text'>Chỉ đường</span>";
         return;
     }
 
-    this.innerText = "❌ Huỷ chỉ đường";
+    // SỬA DÒNG NÀY
+    this.innerHTML = "❌ <span class='btn-text'>Huỷ chỉ đường</span>";
 
     selectingRoute = true;
 
@@ -570,19 +615,19 @@ function createRoute(start, end) {
 
     }).addTo(map);
 
+    // Tìm đoạn này trong hàm createRoute của bạn:
     routingControl.on("routesfound", function (e) {
-
         const route = e.routes[0];
 
-        document.getElementById("dashboard")
-            .classList.add("route-active");
+        document.getElementById("dashboard").classList.add("route-active");
+
+        // THÊM DÒNG NÀY: Để khi tìm đường xong nó mặc định hiện Tab cảnh báo trước
+        document.getElementById("dashboard").classList.add("show-stats");
+        document.getElementById("dashboard").classList.remove("show-steps");
 
         showInstructions(route.instructions);
-
         const coords = route.coordinates;
-
         calculateRouteIncidents(coords);
-
     });
 
 }
@@ -695,7 +740,7 @@ function distanceToSegment(p, p1, p2) {
 }
 
 // =====================================================
-// TÍNH CÁC SỰ CỐ TRÊN TUYẾN ĐƯỜNG
+// TÍNH CÁC SỰ CỐ TRÊN TUYẾN ĐƯỜNG (Bao phủ hết chiều ngang đường)
 // =====================================================
 function calculateRouteIncidents(routeCoords) {
 
@@ -704,7 +749,8 @@ function calculateRouteIncidents(routeCoords) {
     let construction = 0;
     let danger = 0;
 
-    const buffer = 0.0001; // ~10m
+    
+    const buffer = 0.00045; 
 
     markers.forEach(m => {
 
@@ -740,7 +786,6 @@ function calculateRouteIncidents(routeCoords) {
     });
 
     updateDashboard(pothole, flood, construction, danger);
-
 }
 
 // =====================================================
@@ -769,9 +814,18 @@ function cancelRoute() {
     startPoint = null;
     endPoint = null;
 
-    document.getElementById("dashboard")
-        .classList.remove("route-active");
+    // Reset lại Dashboard: Tắt chế độ chỉ đường và xoá các trạng thái Tab
+    const dash = document.getElementById("dashboard");
+    dash.classList.remove("route-active");
+    dash.classList.remove("show-stats");
+    dash.classList.remove("show-steps");
 
+    // Đưa nút Tab về lại màu sắc mặc định cho lần chỉ đường tiếp theo
+    document.getElementById("tab-stats").classList.add("active");
+    document.getElementById("tab-steps").classList.remove("active");
+
+    // Tính lại số lượng cảnh báo trên bản đồ
+    calculateAllIncidents();
 }
 
 
@@ -802,7 +856,7 @@ document.getElementById("drawBtn").onclick = function () {
 
     if (drawMode) {
 
-        this.innerText = "❌ Huỷ vẽ";
+        this.innerHTML = "❌ <span class='btn-text'>Huỷ vẽ</span>";
 
         // tắt kéo bản đồ
         map.dragging.disable();
@@ -821,7 +875,7 @@ document.getElementById("drawBtn").onclick = function () {
 
     } else {
 
-        this.innerText = "✏️ Khoanh vùng";
+        this.innerHTML = "✏️ <span class='btn-text'>Khoanh vùng</span>";
 
         // bật lại kéo bản đồ
         map.dragging.enable();
@@ -1103,6 +1157,24 @@ geocoder.on("markgeocode", function (e) {
     calculateAllAreas();
 
 });
+
+function switchTab(tabName) {
+    const dash = document.getElementById("dashboard");
+    const btnStats = document.getElementById("tab-stats");
+    const btnSteps = document.getElementById("tab-steps");
+
+    if (tabName === 'stats') {
+        dash.classList.add("show-stats");
+        dash.classList.remove("show-steps");
+        btnStats.classList.add("active");
+        btnSteps.classList.remove("active");
+    } else {
+        dash.classList.add("show-steps");
+        dash.classList.remove("show-stats");
+        btnSteps.classList.add("active");
+        btnStats.classList.remove("active");
+    }
+}
 
 
 // =====================================================
