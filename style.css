@@ -13,11 +13,19 @@ body{
 TITLE
 ===================================================== */
 
+/* =====================================================
+TITLE & LOGO
+===================================================== */
 .title{
-    margin-top:15px;
-    color:#444;
-    font-size:28px;
-    text-align:center;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.title .logo-img {
+    height: 60px;          /* Chiều cao logo trên máy tính (bạn có thể tùy chỉnh) */
+    object-fit: contain;
+    vertical-align: middle;
 }
 
 
@@ -459,10 +467,18 @@ MOBILE RESPONSIVE (Tích hợp chống chồng chéo & Logic Tab)
     .title {
         position: absolute; top: 10px; left: 50%;
         transform: translateX(-50%); z-index: 1000;
-        font-size: 16px; margin: 0;
+        margin: 0;
         background: rgba(255, 255, 255, 0.9);
-        padding: 6px 16px; border-radius: 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15); white-space: nowrap;
+        padding: 3px 10px; border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .title .logo-img {
+        height: 32px;      /* Thu nhỏ logo trên mobile để thanh thoát hơn */
+        width: auto;
     }
     .leaflet-control-geocoder {
         position: absolute !important; top: 55px !important; left: 10px !important;

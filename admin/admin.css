@@ -250,7 +250,19 @@ HEADER SIDEBAR & PROFILE
     margin: 0 0 15px 0;
     font-size: 20px;
     color: #1e293b;
-    text-align: center;
+
+    /* Thêm các dòng dưới để căn hàng ngang đều đặn */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    /* Khoảng cách giữa logo và chữ */
+}
+
+/* Thêm class định dạng kích thước logo */
+.admin-logo {
+    height: 26px;/* Chiều cao vừa vặn với kích thước chữ h2 */
+    width: auto;
 }
 
 .admin-profile {
@@ -329,6 +341,12 @@ MOBILE RESPONSIVE (Dành cho Admin)
         flex-direction: column;
         /* Đổi hướng dàn trang thành dọc */
     }
+    .sidebar-header h2 {
+        margin: 0 0 2px 0;
+        font-size: 20px;
+        color: #1e293b;
+        text-align: center;
+    }
 
     #map {
         height: 50vh;
@@ -364,12 +382,7 @@ MOBILE RESPONSIVE (Dành cho Admin)
 
     }
 
-    .sidebar-header h2 {
-        margin: 0 0 2px 0;
-        font-size: 20px;
-        color: #1e293b;
-        text-align: center;
-    }
+    
 
     .filter-buttons {
         margin-bottom: 5px;

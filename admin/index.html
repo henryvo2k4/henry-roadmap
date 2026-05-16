@@ -3,109 +3,114 @@
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Traffic Admin Panel</title>
+    <title>RORA - Admin Panel</title>
 
-<!-- STYLE TRANG CHÍNH -->
-<link rel="stylesheet" href="../style.css">
+    <link rel="icon" type="image/png" href="../image/logo_icon.png">
 
-<!-- STYLE ADMIN -->
-<link rel="stylesheet" href="admin.css">
+    <!-- STYLE TRANG CHÍNH -->
+    <link rel="stylesheet" href="../style.css">
 
-<!-- LEAFLET -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <!-- STYLE ADMIN -->
+    <link rel="stylesheet" href="admin.css">
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- LEAFLET -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
-<!-- SUPABASE -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 </head>
 
 <body>
 
-<div class="container">
+    <div class="container">
 
-    <!-- SIDEBAR -->
+        <!-- SIDEBAR -->
 
 
-    <div class="sidebar">
+        <div class="sidebar">
 
-        <div class="sidebar-header">
-            <h2>🚦 Quản lý báo cáo</h2>
-            
-            <div class="admin-profile">
-                <span id="adminInfo"></span>
-                <button class="logout-btn" onclick="logout()">
-                    Đăng xuất
-                </button>
+            <div class="sidebar-header">
+                <h2>
+                    <img src="../image/logo_icon.png" alt="RODA Logo" class="admin-logo">
+                    Quản lý báo cáo
+                </h2>
+
+                <div class="admin-profile">
+                    <span id="adminInfo"></span>
+                    <button class="logout-btn" onclick="logout()">
+                        Đăng xuất
+                    </button>
+                </div>
             </div>
+
+            <div class="filter-buttons">
+                <button id="btn-pending" class="filter-btn active" onclick="setFilter('pending')">Chưa Duyệt</button>
+                <button id="btn-approved" class="filter-btn" onclick="setFilter('approved')">Đã Duyệt</button>
+                <button id="btn-all" class="filter-btn" onclick="setFilter('all')">Tất cả</button>
+            </div>
+            <div id="reportList"></div>
+
         </div>
 
-        <div class="filter-buttons">
-            <button id="btn-pending" class="filter-btn active" onclick="setFilter('pending')">Chưa Duyệt</button>
-            <button id="btn-approved" class="filter-btn" onclick="setFilter('approved')">Đã Duyệt</button>
-            <button id="btn-all" class="filter-btn" onclick="setFilter('all')">Tất cả</button>
+        <!-- MAP -->
+        <div id="map"></div>
+
+        <div id="imgModal" class="img-modal" onclick="closeImage()">
+            <img id="imgPreview">
         </div>
-        <div id="reportList"></div>
+
+        <div id="imgModal" class="img-modal" onclick="closeImage()">
+            <img id="imgPreview">
+        </div>
 
     </div>
 
-    <!-- MAP -->
-    <div id="map"></div>
+    <script>
 
-    <div id="imgModal" class="img-modal" onclick="closeImage()">
-    <img id="imgPreview">
-</div>
+        const supabaseUrl = "https://sweqvobmlntyhyeuurfr.supabase.co";
+        const supabaseKey = "sb_publishable_xsqRVFRoQSh0c9wzwc5vxA_Hw9aj9fF";
 
-<div id="imgModal" class="img-modal" onclick="closeImage()">
-    <img id="imgPreview">
-</div>
+        const supabaseClient = supabase.createClient(
+            supabaseUrl,
+            supabaseKey
+        );
 
-</div>
+        async function checkLogin() {
 
-<script>
+            const { data: { session } } = await supabaseClient.auth.getSession();
 
-const supabaseUrl = "https://sweqvobmlntyhyeuurfr.supabase.co";
-const supabaseKey = "sb_publishable_xsqRVFRoQSh0c9wzwc5vxA_Hw9aj9fF";
+            if (!session) {
+                window.location.href = "login.html";
+                return;
+            }
 
-const supabaseClient = supabase.createClient(
-    supabaseUrl,
-    supabaseKey
-);
+            // hiển thị email admin
+            document.getElementById("adminInfo").innerHTML =
+                session.user.email;
 
-async function checkLogin(){
+            // chỉ khi login thành công mới load admin.js
+            const script = document.createElement("script");
+            script.src = "admin.js";
+            document.body.appendChild(script);
 
-    const { data: { session } } = await supabaseClient.auth.getSession();
+        }
 
-    if(!session){
-        window.location.href = "login.html";
-        return;
-    }
+        async function logout() {
 
-    // hiển thị email admin
-    document.getElementById("adminInfo").innerHTML =
-        session.user.email;
+            await supabaseClient.auth.signOut();
+            window.location.href = "login.html";
 
-    // chỉ khi login thành công mới load admin.js
-    const script = document.createElement("script");
-    script.src = "admin.js";
-    document.body.appendChild(script);
+        }
 
-}
+        checkLogin();
 
-async function logout(){
-
-    await supabaseClient.auth.signOut();
-    window.location.href = "login.html";
-
-}
-
-checkLogin();
-
-</script>
+    </script>
 
 </body>
 
