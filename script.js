@@ -178,44 +178,49 @@ map.on("click", function () {
 // =====================================================
 // FORM BÁO CÁO
 // =====================================================
-
 function openReportForm() {
-
     const formHTML = `
     <div style="width:220px">
-
         <b>🚨 Báo cáo sự cố</b><br><br>
 
-        <select id="incidentType">
+        <select id="incidentType" onchange="toggleDistanceField()">
             <option value="">-- chọn loại --</option>
             <option value="Hố gà">🚧 Hố gà</option>
             <option value="Lũ lụt">🌊 Ngập nước</option>
             <option value="Thi công">🏗️ Thi công</option>
             <option value="Nguy hiểm">⚠️ Nguy hiểm</option>
         </select>
-
         <br><br>
+
+        <div id="distanceField" style="display: none; margin-bottom: 15px;">
+            <input type="number" id="incidentDistance" placeholder="Quãng đường (m) - VD: 50" style="width:100%; padding: 5px; box-sizing: border-box; border-radius: 4px; border: 1px solid #ccc;">
+        </div>
 
         <textarea 
             id="incidentDesc"
             placeholder="Mô tả sự cố..."
-            style="width:100%;height:60px"
+            style="width:100%;height:60px; box-sizing: border-box;"
         ></textarea>
-
         <br><br>
 
-        <input 
-            type="file" 
-            id="incidentImage" 
-            multiple 
-            accept="image/*"
-        ><small>Tối đa 5 ảnh</small>
-
+        <input type="file" id="incidentImage" multiple accept="image/*">
+        <small>Tối đa 5 ảnh</small>
         <br><br>
 
-        <button onclick="submitReport()">Gửi báo cáo</button>
-
+        <button onclick="submitReport()" style="width:100%; padding: 8px; border-radius: 6px; background: #2b8cff; color: white; border: none; cursor: pointer;">Gửi báo cáo</button>
     </div>
+
+    <script>
+        function toggleDistanceField() {
+            const type = document.getElementById("incidentType").value;
+            const distField = document.getElementById("distanceField");
+            if (type === "Lũ lụt" || type === "Thi công") {
+                distField.style.display = "block";
+            } else {
+                distField.style.display = "none";
+            }
+        }
+    </script>
     `;
 
     L.popup()
@@ -233,6 +238,10 @@ async function submitReport() {
 
     const type = document.getElementById("incidentType").value;
     const description = document.getElementById("incidentDesc").value;
+
+    // Lấy distance, nếu người dùng không nhập hoặc loại khác thì mặc định là 50m
+    const distanceInput = document.getElementById("incidentDistance");
+    const distance = distanceInput && distanceInput.value ? parseInt(distanceInput.value) : 50;
 
     if (!type) {
         alert("Hãy chọn loại sự cố");
@@ -288,6 +297,7 @@ async function submitReport() {
                 type: type,
                 description: description,
                 image_url: JSON.stringify(imageURLs),
+                distance: distance,
                 status: "pending",
                 created_at: new Date().toISOString()
             }
@@ -426,6 +436,18 @@ async function loadIncidents() {
 
         marker.bindPopup(popupContent);
         markers.push(marker);
+
+        if (group.type === "Lũ lụt" || group.type === "Thi công") {
+            // Lấy distance từ báo cáo đầu tiên trong group (hoặc 50m nếu ko có)
+            const distance = group.incidents[0].distance || 50; 
+            
+            // Chạy bất đồng bộ (không await để không chặn vòng lặp render marker)
+            getRoadSegment(group.lat, group.lng, distance).then(roadCoords => {
+                if (roadCoords) {
+                    drawIncidentLine(group.type, roadCoords);
+                }
+            });
+        }
     }
 
     // Cập nhật lại số liệu cho Dashboard
@@ -1211,6 +1233,49 @@ function switchTab(tabName) {
     }
 }
 
+// HÀM GIS: LẤY VÀ CẮT TUYẾN ĐƯỜNG (OVERPASS + TURF.JS)
+async function getRoadSegment(lat, lng, distanceMeters) {
+    const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];way(around:20,${lat},${lng})[highway];out geom;`;
+    try {
+        const response = await fetch(overpassUrl);
+        const data = await response.json();
+        
+        if (!data.elements || data.elements.length === 0) return null;
+        
+        const way = data.elements[0];
+        const coords = way.geometry.map(pos => [pos.lon, pos.lat]);
+        
+        const line = turf.lineString(coords);
+        const centerPt = turf.point([lng, lat]);
+        
+        const snapped = turf.nearestPointOnLine(line, centerPt);
+        const distKm = distanceMeters / 1000;
+        const centerDist = snapped.properties.location; 
+        
+        let startDist = Math.max(0, centerDist - (distKm / 2));
+        let endDist = centerDist + (distKm / 2);
+        
+        const totalLength = turf.length(line);
+        if (endDist > totalLength) endDist = totalLength;
+        
+        const segment = turf.lineSliceAlong(line, startDist, endDist);
+        return segment.geometry.coordinates.map(c => [c[1], c[0]]);
+    } catch (error) {
+        console.error("Lỗi GIS:", error);
+        return null;
+    }
+}
+
+//  HÀM VẼ HIỆU ỨNG ĐƯỜNG LÊN BẢN ĐỒ
+function drawIncidentLine(incidentType, latlngs) {
+    if (!latlngs || latlngs.length === 0) return;
+    if (incidentType === "Lũ lụt") {
+        L.polyline(latlngs, { color: "#2b8cff", weight: 8, opacity: 0.7, lineCap: "round", lineJoin: "round" }).addTo(map);
+    } else if (incidentType === "Thi công") {
+        L.polyline(latlngs, { color: "#000000", weight: 8, opacity: 0.8, lineCap: "butt" }).addTo(map);
+        L.polyline(latlngs, { color: "#ffcc00", weight: 8, dashArray: "15, 15", opacity: 1, lineCap: "butt" }).addTo(map);
+    }
+}
 
 // =====================================================
 // Database Testing with Supabase
