@@ -178,6 +178,22 @@ map.on("click", function () {
 // =====================================================
 // FORM BÁO CÁO
 // =====================================================
+
+// 1. Khai báo hàm ẩn/hiện ở phạm vi toàn cục (global) để HTML gọi được
+window.toggleDistanceField = function() {
+    const type = document.getElementById("incidentType").value;
+    const distField = document.getElementById("distanceField");
+    
+    if (distField) {
+        if (type === "Lũ lụt" || type === "Thi công") {
+            distField.style.display = "block";
+        } else {
+            distField.style.display = "none";
+        }
+    }
+};
+
+// 2. Hàm mở form (đã xóa thẻ <script> bên trong chuỗi HTML)
 function openReportForm() {
     const formHTML = `
     <div style="width:220px">
@@ -209,18 +225,6 @@ function openReportForm() {
 
         <button onclick="submitReport()" style="width:100%; padding: 8px; border-radius: 6px; background: #2b8cff; color: white; border: none; cursor: pointer;">Gửi báo cáo</button>
     </div>
-
-    <script>
-        function toggleDistanceField() {
-            const type = document.getElementById("incidentType").value;
-            const distField = document.getElementById("distanceField");
-            if (type === "Lũ lụt" || type === "Thi công") {
-                distField.style.display = "block";
-            } else {
-                distField.style.display = "none";
-            }
-        }
-    </script>
     `;
 
     L.popup()
