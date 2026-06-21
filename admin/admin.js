@@ -156,14 +156,16 @@ function viewIncident(lat, lng) {
 
 
 // =====================================================
-// APPROVE
+// APPROVE 
 // =====================================================
-
 async function approve(id) {
 
     const { error } = await supabaseClient
         .from("road_events")
-        .update({ status: "approved" })
+        .update({ 
+            status: "approved",
+            approved_at: new Date().toISOString() // TỰ ĐỘNG LƯU THỜI GIAN DUYỆT TẠI ĐÂY
+        })
         .eq("id", id);
 
     if (error) {

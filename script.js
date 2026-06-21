@@ -238,6 +238,10 @@ function openReportForm() {
 // SUBMIT REPORT
 // =====================================================
 
+// =====================================================
+// SUBMIT REPORT (CÓ TÍCH HỢP AI DUYỆT NGẦM)
+// =====================================================
+
 async function submitReport() {
 
     const type = document.getElementById("incidentType").value;
@@ -253,7 +257,6 @@ async function submitReport() {
     }
 
     const fileInput = document.getElementById("incidentImage");
-
     let imageURLs = [];
 
     if (fileInput.files.length > 0) {
@@ -261,6 +264,13 @@ async function submitReport() {
         if (fileInput.files.length > 5) {
             alert("Chỉ được tối đa 5 ảnh");
             return;
+        }
+
+        // Đổi giao diện nút gửi thành Đang xử lý để tránh user bấm nhiều lần
+        const btn = document.querySelector("button[onclick='submitReport()']");
+        if (btn) {
+            btn.innerText = "⏳ Đang xử lý dữ liệu...";
+            btn.disabled = true;
         }
 
         for (const file of fileInput.files) {
@@ -285,11 +295,55 @@ async function submitReport() {
             imageURLs.push(data.publicUrl);
 
         }
-
+    } else {
+        const btn = document.querySelector("button[onclick='submitReport()']");
+        if (btn) {
+            btn.innerText = "⏳ Đang xử lý dữ liệu...";
+            btn.disabled = true;
+        }
     }
 
     // =====================================================
-    // LƯU DATABASE
+    // GỌI AI PHÂN TÍCH NGẦM & LƯU DATABASE
+    // =====================================================
+    
+    // Mặc định trạng thái ban đầu là 'pending' (Chờ duyệt)
+    let finalStatus = "pending"; 
+
+    // Chỉ gọi AI nếu user có gửi ảnh lên
+    if (imageURLs.length > 0) {
+        try {
+            // Thay đường link này bằng đường link Render thực tế của bạn
+            const AI_API_URL = "https://roda-ai-api.onrender.com/analyze-incident"; 
+            
+            const response = await fetch(AI_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image_url: imageURLs[0] }) // Gửi ảnh đầu tiên cho AI
+            });
+
+            const aiResult = await response.json();
+            
+            // Xử lý logic tự động đổi cờ (ẩn hoàn toàn với user)
+            if (aiResult.detected) {
+                let mappedUserType = "unknown";
+                if (type === "Hố gà") mappedUserType = "pothole";
+                if (type === "Lũ lụt") mappedUserType = "flood";
+                if (type === "Thi công") mappedUserType = "construction";
+
+                // AI đoán TRÚNG loại sự cố & độ tự tin > 70% -> Lật cờ thành approved ngầm!
+                if (mappedUserType === aiResult.ai_label && aiResult.confidence > 0.7) {
+                    finalStatus = "approved";
+                }
+            }
+        } catch (error) {
+            console.error("Lỗi khi kết nối AI Server (Chuyển về pending):", error);
+            // Nếu AI sập, hệ thống vẫn an toàn giữ cờ pending để Admin tự duyệt
+        }
+    }
+
+    // =====================================================
+    // LƯU DATABASE CUỐI CÙNG
     // =====================================================
 
     const { error } = await supabaseClient
@@ -302,24 +356,36 @@ async function submitReport() {
                 description: description,
                 image_url: JSON.stringify(imageURLs),
                 distance: distance,
-                status: "pending",
-                created_at: new Date().toISOString()
+                status: finalStatus, // Lưu cờ (pending hoặc approved) do AI quyết định
+                created_at: new Date().toISOString(),
+                approved_at: finalStatus === "approved" ? new Date().toISOString() : null
             }
         ]);
 
     if (error) {
         console.log("Lỗi lưu DB:", error);
-        alert("❌ Không gửi được báo cáo");
+        alert("❌ Đã xảy ra sự cố, vui lòng thử lại sau.");
+        
+        // Trả lại nút nếu lỗi
+        const btn = document.querySelector("button[onclick='submitReport()']");
+        if (btn) {
+            btn.innerText = "Gửi báo cáo";
+            btn.disabled = false;
+        }
         return;
     }
 
-    alert("✅ Báo cáo đã gửi, chờ admin duyệt");
+    // Hiển thị một thông báo mượt mà duy nhất
+    alert("✅ Báo cáo của bạn đã được hệ thống ghi nhận!");
 
+    // Dọn dẹp bản đồ
     map.removeLayer(tempMarker);
     tempMarker = null;
-
     map.closePopup();
 
+    // Load lại dữ liệu ngay lập tức
+    // Nếu AI vừa lật cờ thành "approved", người dùng sẽ thấy điểm nhảy lên bản đồ liền!
+    loadIncidents();
 }
 
 
@@ -339,10 +405,27 @@ async function loadIncidents() {
         return;
     }
 
+    // =====================================================
+    // LỌC TỰ ĐỘNG ẨN CẢNH BÁO LŨ LỤT QUÁ 3 TIẾNG
+    // =====================================================
+    const now = new Date();
+    const threeHoursInMs = 3 * 60 * 60 * 1000; // 3 tiếng đổi ra miligiây
+
+    let activeIncidents = data.filter(row => {
+        if (row.type === "Lũ lụt" && row.approved_at) {
+            const approvedTime = new Date(row.approved_at);
+            // Nếu thời gian hiện tại trừ thời gian duyệt lớn hơn 3 tiếng -> Ẩn đi (bỏ qua)
+            if (now - approvedTime > threeHoursInMs) {
+                return false; 
+            }
+        }
+        return true; 
+    });
+
     let rawPoints = [];
 
     // 1. Kéo tất cả các điểm vào đường trước
-    for (const row of data) {
+    for (const row of activeIncidents) {
         const snappedCoords = await snapToRoad(row.lat, row.lng);
         rawPoints.push({
             ...row,
