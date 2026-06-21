@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Thiết bị IoT - RODA</title>
+    <title>Quản lý Thiết bị - RODA</title>
 
     <link rel="icon" type="image/png" href="../image/logo_icon.png">
     
@@ -16,8 +16,8 @@
 <body>
 
     <div class="header">
-        <h2>📡 Quản lý Thiết bị IoT</h2>
-        <button class="btn-add" onclick="openAddModal()">+ Thêm Thiết bị</button>
+        <h2>📡 Quản lý Thiết bị</h2>
+        <button class="btn-add" onclick="openAddModal()">Thêm Thiết bị</button>
     </div>
 
     <div class="container">
@@ -26,7 +26,7 @@
     </div>
 
     <div class="modal" id="addModal">
-        <div class="modal-content" style="width: 500px;"> <h3>Đăng ký Node mới</h3>
+        <div class="modal-content"> <h3>Đăng ký Node mới</h3>
             <div class="form-group">
                 <label>Device ID (VD: NODE_01)</label>
                 <input type="text" id="devId" placeholder="Mã thiết bị">
@@ -74,7 +74,7 @@
     </div>
 
     <div class="modal" id="infoModal">
-        <div class="modal-content" style="width: 500px;">
+        <div class="modal-content">
             <h3 id="infoName">Tên thiết bị</h3>
             <p><b>ID:</b> <span id="infoId"></span></p>
             
@@ -92,6 +92,7 @@
             
             <div class="btn-group">
                 <button class="btn-cancel" onclick="closeModal('infoModal')">Đóng</button>
+                <button class="btn-delete" id="btnDeleteDevice">Xóa thiết bị</button>
             </div>
         </div>
     </div>

@@ -195,3 +195,86 @@ body {
     margin-bottom: 8px; 
     font-size: 13px; 
 }
+
+/* Nút Xóa Thiết bị */
+.btn-delete { 
+    flex: 1; 
+    background: #ef4444; 
+    color: white; 
+    border: none; 
+    padding: 10px; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    transition: 0.2s;
+}
+
+.btn-delete:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+}
+
+/* =====================================================
+   MOBILE RESPONSIVE (DÀNH CHO ĐIỆN THOẠI)
+===================================================== */
+/* Tối ưu mặc định cho Modal trên tất cả màn hình */
+.modal-content {
+    width: 90%; /* Thuộc tính thay thế cho 500px cứng */
+    max-width: 500px; 
+    box-sizing: border-box;
+}
+
+/* Kích hoạt khi màn hình nhỏ hơn 600px */
+@media (max-width: 600px) {
+    /* Thu gọn Header */
+    .header {
+        padding: 15px;
+    }
+    
+    .header h2 {
+        font-size: 18px;
+    }
+    
+    .btn-add {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    /* Thu gọn khoảng cách danh sách */
+    .container {
+        padding: 15px;
+    }
+    
+    .device-grid {
+        grid-template-columns: 1fr; /* Ép hiển thị 1 cột duy nhất */
+        gap: 15px;
+    }
+
+    /* Bo gọn Popup Modal */
+    .modal-content {
+        padding: 20px;
+        max-height: 90vh; /* Tránh popup dài quá tràn khỏi màn hình */
+    }
+
+    .modal-content h3 {
+        font-size: 18px;
+    }
+
+    /* Thu nhỏ bản đồ để lấy không gian cho khung nhập liệu */
+    #pickerMap {
+        height: 200px !important;
+        margin-bottom: 10px;
+    }
+
+    /* Sắp xếp lại 2 nút Xóa và Đóng (cho nằm dọc thay vì ngang nếu chữ quá dài) */
+    .btn-group {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .btn-group button {
+        width: 100%;
+        padding: 12px; /* Tăng padding để ngón tay dễ bấm hơn */
+    }
+}

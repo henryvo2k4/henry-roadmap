@@ -196,6 +196,45 @@ async function openInfoModal(dev) {
     });
 
     historyContainer.innerHTML = historyHTML;
+    const btnDelete = document.getElementById("btnDeleteDevice");
+    btnDelete.onclick = () => deleteDevice(dev.id);
+
+}
+
+// =====================================================
+// 7. XÓA THIẾT BỊ
+// =====================================================
+async function deleteDevice(deviceId) {
+    // 1. Hiển thị cảnh báo xác nhận
+    const isConfirm = confirm(`⚠️ Bạn có chắc chắn muốn xóa thiết bị [${deviceId}] không?\nDữ liệu này không thể khôi phục!`);
+    
+    if (!isConfirm) return; // Nếu chọn Cancel thì thoát luôn
+
+    // 2. Đổi chữ trên nút để báo hiệu đang xử lý
+    const btnDelete = document.getElementById("btnDeleteDevice");
+    btnDelete.innerText = "⏳ Đang xóa...";
+    btnDelete.disabled = true;
+
+    // 3. Gọi lệnh xóa trên Supabase
+    const { error } = await supabaseClient
+        .from("devices")
+        .delete()
+        .eq("id", deviceId);
+
+    if (error) {
+        alert("❌ Lỗi khi xóa: " + error.message);
+        btnDelete.innerText = "Xóa thiết bị";
+        btnDelete.disabled = false;
+        return;
+    }
+
+    // 4. Thông báo thành công, đóng modal và tải lại lưới thiết bị
+    alert("✅ Xóa thiết bị thành công!");
+    btnDelete.innerText = "Xóa thiết bị";
+    btnDelete.disabled = false;
+    
+    closeModal('infoModal');
+    loadDevices();
 }
 
 // 6. Chạy khi load trang
