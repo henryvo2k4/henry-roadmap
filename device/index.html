@@ -6,8 +6,10 @@
     <title>Quản lý Thiết bị IoT - RODA</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="device.css">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
@@ -22,8 +24,7 @@
     </div>
 
     <div class="modal" id="addModal">
-        <div class="modal-content">
-            <h3>Đăng ký Node mới</h3>
+        <div class="modal-content" style="width: 500px;"> <h3>Đăng ký Node mới</h3>
             <div class="form-group">
                 <label>Device ID (VD: NODE_01)</label>
                 <input type="text" id="devId" placeholder="Mã thiết bị">
@@ -42,13 +43,21 @@
 
             <div id="fixedNodeConfig">
                 <div class="form-group">
-                    <label>Vĩ độ (Lat)</label>
-                    <input type="number" id="devLat" step="any">
+                    <label>📍 Chấm vị trí đặt trạm trên bản đồ:</label>
+                    <div id="pickerMap" style="height: 250px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; z-index: 1;"></div>
                 </div>
-                <div class="form-group">
-                    <label>Kinh độ (Lng)</label>
-                    <input type="number" id="devLng" step="any">
+
+                <div style="display: flex; gap: 10px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Vĩ độ (Lat)</label>
+                        <input type="number" id="devLat" step="any" readonly style="background: #f1f5f9; color: #64748b;">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Kinh độ (Lng)</label>
+                        <input type="number" id="devLng" step="any" readonly style="background: #f1f5f9; color: #64748b;">
+                    </div>
                 </div>
+
                 <div class="form-group">
                     <label>Khoảng cách Base đến mặt đường (cm)</label>
                     <input type="number" id="devBase" placeholder="Dùng để tính mức ngập">

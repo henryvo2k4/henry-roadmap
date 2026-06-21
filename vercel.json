@@ -6,7 +6,7 @@
       "permanent": true
     },
     {
-      "source": "/device*",
+      "source": "/device",
       "destination": "/device/",
       "permanent": true
     }

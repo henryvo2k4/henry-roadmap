@@ -3,6 +3,10 @@ const supabaseUrl = "https://sweqvobmlntyhyeuurfr.supabase.co";
 const supabaseKey = "sb_publishable_xsqRVFRoQSh0c9wzwc5vxA_Hw9aj9fF";
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
+// Biến toàn cục cho bản đồ chọn tọa độ
+let pickerMap = null;
+let pickerMarker = null;
+
 // 2. Load danh sách thiết bị
 async function loadDevices() {
     const { data, error } = await supabaseClient.from("devices").select("*").order("created_at", { ascending: false });
@@ -21,7 +25,6 @@ async function loadDevices() {
             ? `<span class="badge fixed">📍 Cố định</span>` 
             : `<span class="badge mobile">🚌 Di động</span>`;
 
-        // Nếu là Node di động, không hiển thị tọa độ và base
         const detailsHTML = isFixed 
             ? `<p><b>Tọa độ:</b> ${dev.lat}, ${dev.lng}</p>
                <p><b>Base:</b> ${dev.base_distance} cm</p>`
@@ -40,21 +43,23 @@ async function loadDevices() {
     });
 }
 
-// 3. Logic Ẩn/Hiện Form Thêm Thiết bị
+// 3. Logic Ẩn/Hiện Form & Render Bản Đồ
 function toggleConfigFields() {
     const type = document.getElementById("devType").value;
     const configDiv = document.getElementById("fixedNodeConfig");
     
-    // Nếu là fixed thì hiện, mobile thì ẩn
     if (type === 'fixed') {
         configDiv.style.display = "block";
+        // Bắt buộc gọi lại size bản đồ sau khi hiển thị thẻ Div để không bị lỗi xám mờ
+        if (pickerMap) {
+            setTimeout(() => pickerMap.invalidateSize(), 150);
+        }
     } else {
         configDiv.style.display = "none";
     }
 }
 
 function openAddModal() {
-    // Reset form mỗi khi mở
     document.getElementById("devId").value = "";
     document.getElementById("devName").value = "";
     document.getElementById("devType").value = "fixed";
@@ -62,8 +67,39 @@ function openAddModal() {
     document.getElementById("devLng").value = "";
     document.getElementById("devBase").value = "";
     
-    toggleConfigFields(); // Cập nhật lại UI
+    toggleConfigFields();
     document.getElementById("addModal").style.display = "flex";
+
+    // Khởi tạo bản đồ nếu đây là lần đầu mở Modal
+    if (!pickerMap) {
+        // Tọa độ mặc định: Hồ Chí Minh
+        pickerMap = L.map('pickerMap', { doubleClickZoom: false }).setView([10.8231, 106.6297], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(pickerMap);
+
+        // Sự kiện click lên bản đồ
+        pickerMap.on('click', function(e) {
+            const lat = e.latlng.lat.toFixed(6);
+            const lng = e.latlng.lng.toFixed(6);
+
+            // Điền số vào 2 ô input
+            document.getElementById("devLat").value = lat;
+            document.getElementById("devLng").value = lng;
+
+            // Di chuyển Marker
+            if (pickerMarker) {
+                pickerMarker.setLatLng(e.latlng);
+            } else {
+                pickerMarker = L.marker(e.latlng).addTo(pickerMap);
+            }
+        });
+    }
+
+    // Reset marker nếu đã có từ lần bật trước, đồng thời fix lỗi render
+    if (pickerMarker) {
+        pickerMap.removeLayer(pickerMarker);
+        pickerMarker = null;
+    }
+    setTimeout(() => pickerMap.invalidateSize(), 200);
 }
 
 function closeModal(modalId) {
@@ -81,13 +117,17 @@ async function saveDevice() {
         return;
     }
 
-    // Logic kiểm tra: Nếu là di động thì gán null, nếu cố định thì lấy giá trị
     let lat = null, lng = null, base_distance = null;
     
     if (type === 'fixed') {
-        lat = parseFloat(document.getElementById("devLat").value) || null;
-        lng = parseFloat(document.getElementById("devLng").value) || null;
+        lat = parseFloat(document.getElementById("devLat").value);
+        lng = parseFloat(document.getElementById("devLng").value);
         base_distance = parseFloat(document.getElementById("devBase").value) || null;
+
+        if (!lat || !lng) {
+            alert("Vui lòng chấm một vị trí trên bản đồ!");
+            return;
+        }
     }
 
     const { error } = await supabaseClient.from("devices").insert([
@@ -101,7 +141,7 @@ async function saveDevice() {
 
     alert("✅ Thêm thiết bị thành công!");
     closeModal('addModal');
-    loadDevices(); // Reload danh sách
+    loadDevices(); 
 }
 
 // 5. Mở Modal Chi tiết & Lịch sử báo cáo
@@ -112,7 +152,6 @@ async function openInfoModal(dev) {
     const isFixed = dev.type === 'fixed';
     const paramsDiv = document.getElementById("infoFixedParams");
     
-    // Nếu là cố định thì hiện thông số, di động thì ẩn
     if (isFixed) {
         paramsDiv.style.display = "block";
         document.getElementById("infoCoords").innerText = `${dev.lat || 'N/A'}, ${dev.lng || 'N/A'}`;
@@ -126,7 +165,6 @@ async function openInfoModal(dev) {
     const historyContainer = document.getElementById("historyContainer");
     historyContainer.innerHTML = "⏳ Đang tải dữ liệu...";
 
-    // Truy vấn lịch sử (Vẫn áp dụng chung cho cả cố định và di động)
     const { data, error } = await supabaseClient
         .from("road_events")
         .select("*")
@@ -147,7 +185,6 @@ async function openInfoModal(dev) {
     let historyHTML = "";
     data.forEach(event => {
         const time = new Date(event.created_at).toLocaleString("vi-VN");
-        // Với node di động, tạo độ sẽ được lưu trực tiếp vào bảng road_events thay vì lấy từ cấu hình
         historyHTML += `
             <div class="history-item">
                 <b>⏱ ${time}</b><br>
