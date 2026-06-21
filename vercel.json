@@ -4,6 +4,11 @@
       "source": "/admin",
       "destination": "/admin/",
       "permanent": true
+    },
+    {
+      "source": "/device*",
+      "destination": "/device/",
+      "permanent": true
     }
   ]
 }
