@@ -314,7 +314,7 @@ async function submitReport() {
     if (imageURLs.length > 0) {
         try {
             // Thay đường link này bằng đường link Render thực tế của bạn
-            const AI_API_URL = "https://roda-ai-server.onrender.com"; 
+            const AI_API_URL = "https://hen2k4-roda-ai-api.hf.space/analyze-incident"; 
             
             const response = await fetch(AI_API_URL, {
                 method: 'POST',
