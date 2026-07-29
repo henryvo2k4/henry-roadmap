@@ -220,7 +220,7 @@ body {
 ===================================================== */
 /* Tối ưu mặc định cho Modal trên tất cả màn hình */
 .modal-content {
-    width: 90%; /* Thuộc tính thay thế cho 500px cứng */
+    width: 90%; 
     max-width: 500px; 
     box-sizing: border-box;
 }
@@ -247,14 +247,14 @@ body {
     }
     
     .device-grid {
-        grid-template-columns: 1fr; /* Ép hiển thị 1 cột duy nhất */
+        grid-template-columns: 1fr; 
         gap: 15px;
     }
 
     /* Bo gọn Popup Modal */
     .modal-content {
         padding: 20px;
-        max-height: 90vh; /* Tránh popup dài quá tràn khỏi màn hình */
+        max-height: 90vh; 
     }
 
     .modal-content h3 {
@@ -275,6 +275,6 @@ body {
     
     .btn-group button {
         width: 100%;
-        padding: 12px; /* Tăng padding để ngón tay dễ bấm hơn */
+        padding: 12px; 
     }
 }

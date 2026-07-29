@@ -202,7 +202,7 @@ function openReportForm() {
         <select id="incidentType" onchange="toggleDistanceField()">
             <option value="">-- chọn loại --</option>
             <option value="Hố gà">🚧 Hố gà</option>
-            <option value="Lũ lụt">🌊 Ngập nước</option>
+            <option value="Lũ lụt">🌊 Lũ lụt</option>
             <option value="Thi công">🏗️ Thi công</option>
             <option value="Nguy hiểm">⚠️ Nguy hiểm</option>
         </select>
@@ -313,8 +313,7 @@ async function submitReport() {
     // Chỉ gọi AI nếu user có gửi ảnh lên
     if (imageURLs.length > 0) {
         try {
-            // Thay đường link này bằng đường link Render thực tế của bạn
-            const AI_API_URL = "https://hen2k4-roda-ai-api.hf.space/analyze-incident"; 
+             const AI_API_URL = "https://hen2k4-roda-ai-api.hf.space/analyze-incident"; 
             
             const response = await fetch(AI_API_URL, {
                 method: 'POST',
@@ -375,7 +374,6 @@ async function submitReport() {
         return;
     }
 
-    // Hiển thị một thông báo mượt mà duy nhất
     alert("✅ Báo cáo của bạn đã được hệ thống ghi nhận!");
 
     // Dọn dẹp bản đồ
@@ -390,10 +388,14 @@ async function submitReport() {
 
 
 // =====================================================
-// LOAD INCIDENTS (Tự động Snap to Road & Gộp điểm dưới 10m)
+// LOAD INCIDENTS 
 // =====================================================
 
 async function loadIncidents() {
+    if (markers.length > 0) {
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
+    }
 
     const { data, error } = await supabaseClient
         .from("road_events")
@@ -405,34 +407,10 @@ async function loadIncidents() {
         return;
     }
 
-    // =====================================================
-    // LỌC TỰ ĐỘNG ẨN CẢNH BÁO LŨ LỤT QUÁ 3 TIẾNG
-    // =====================================================
-    const now = new Date();
-    const threeHoursInMs = 3 * 60 * 60 * 1000; // 3 tiếng đổi ra miligiây
-
-    let activeIncidents = data.filter(row => {
-        if (row.type === "Lũ lụt" && row.approved_at) {
-            const approvedTime = new Date(row.approved_at);
-            // Nếu thời gian hiện tại trừ thời gian duyệt lớn hơn 3 tiếng -> Ẩn đi (bỏ qua)
-            if (now - approvedTime > threeHoursInMs) {
-                return false; 
-            }
-        }
-        return true; 
-    });
-
-    let rawPoints = [];
+    
 
     // 1. Kéo tất cả các điểm vào đường trước
-    for (const row of activeIncidents) {
-        const snappedCoords = await snapToRoad(row.lat, row.lng);
-        rawPoints.push({
-            ...row,
-            lat: snappedCoords.lat,
-            lng: snappedCoords.lng
-        });
-    }
+    let rawPoints = [...data];
 
     // 2. Thuật toán gộp các điểm (Cùng loại & cách nhau <= 10m)
     let groupedPoints = [];
@@ -475,9 +453,8 @@ async function loadIncidents() {
             { icon: icon }
         ).addTo(map);
 
-        marker.incidentType = group.type; // Lưu loại sự cố để hàm calculate đếm
+        marker.incidentType = group.type; 
 
-        // Tạo nội dung Popup (Có thanh cuộn để tránh bị tràn màn hình nếu gộp quá nhiều)
         let popupContent = `<div style="max-height: 250px; overflow-y: auto; padding-right: 5px;">`;
         
         popupContent += `<b style="font-size:15px;">Sự cố:</b> ${group.type}`;
@@ -633,7 +610,7 @@ document.getElementById("routeBtn").onclick = function () {
 
 
 // =====================================================
-// SNAP TO ROAD (điều chỉnh điểm người dùng chọn cho chính xác trên đường)
+// SNAP TO ROAD
 // =====================================================
 
 async function snapToRoad(lat, lng) {
@@ -729,13 +706,11 @@ function createRoute(start, end) {
 
     }).addTo(map);
 
-    // Tìm đoạn này trong hàm createRoute của bạn:
     routingControl.on("routesfound", function (e) {
         const route = e.routes[0];
 
         document.getElementById("dashboard").classList.add("route-active");
 
-        // THÊM DÒNG NÀY: Để khi tìm đường xong nó mặc định hiện Tab cảnh báo trước
         document.getElementById("dashboard").classList.add("show-stats");
         document.getElementById("dashboard").classList.remove("show-steps");
 
@@ -805,7 +780,7 @@ function isPointInPolygon(point, polygon) {
 }
 
 // =====================================================
-// DISTANCE TO SEGMENT (để tính khoảng cách từ điểm đến đường đi)
+// DISTANCE TO SEGMENT
 // =====================================================
 function distanceToSegment(p, p1, p2) {
 
@@ -1253,7 +1228,7 @@ function clearAllDrawings() {
 
 
 // =====================================================
-// SEARCH → KHOANH VÙNG (Vẽ theo ranh giới hành chính)
+// SEARCH → KHOANH VÙNG 
 // =====================================================
 
 geocoder.on("markgeocode", function (e) {
@@ -1270,7 +1245,7 @@ geocoder.on("markgeocode", function (e) {
         // Phân tích dữ liệu GeoJSON thành các lớp Polygon của Leaflet
         const geojsonLayer = L.geoJSON(geojson);
         
-        // Tách từng vùng ra để vẽ (đảm bảo tương thích hoàn hảo với hàm tính toán của bạn)
+        // Tách từng vùng ra để vẽ 
         geojsonLayer.eachLayer(function (layer) {
             if (layer instanceof L.Polygon) {
                 // Áp dụng màu sắc giống hệt nét vẽ tay của bạn

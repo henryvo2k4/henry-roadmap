@@ -10,10 +10,6 @@ body{
 
 
 /* =====================================================
-TITLE
-===================================================== */
-
-/* =====================================================
 TITLE & LOGO
 ===================================================== */
 .title{
@@ -304,7 +300,7 @@ DASHBOARD
     bottom:40px;
     left:40px;
 
-    width:260px;   /* mặc định nhỏ */
+    width:260px;  
 
     background:white;
 
@@ -441,9 +437,6 @@ SCROLLBAR
 MOBILE
 ===================================================== */
 
-/* =====================================================
-MOBILE RESPONSIVE (Fix lỗi chồng chéo giao diện)
-===================================================== */
 /* --- TRÊN WEB (Mặc định) --- */
 #dashboard-tabs {
     display: none; /* Ẩn đi khi ở màn hình máy tính */
@@ -493,14 +486,14 @@ MOBILE RESPONSIVE (Tích hợp chống chồng chéo & Logic Tab)
     #gpsBtn, #routeBtn, #drawBtn {
         width: 25px; 
         height: 25px; 
-        border-radius: 50%; /* Nút hình tròn */
+        border-radius: 50%; 
         padding: 0; 
         display: flex; 
         align-items: center; 
         justify-content: center;
-        font-size: 15px; /* Phóng to icon lên một chút */
-        top: auto; /* Hủy lệnh dính ở phía trên */
-        right: 15px; /* Nằm mép phải */
+        font-size: 15px; 
+        top: auto; 
+        right: 15px; 
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
     #gpsBtn { bottom: 200px; } 

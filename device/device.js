@@ -50,7 +50,6 @@ function toggleConfigFields() {
     
     if (type === 'fixed') {
         configDiv.style.display = "block";
-        // Bắt buộc gọi lại size bản đồ sau khi hiển thị thẻ Div để không bị lỗi xám mờ
         if (pickerMap) {
             setTimeout(() => pickerMap.invalidateSize(), 150);
         }
